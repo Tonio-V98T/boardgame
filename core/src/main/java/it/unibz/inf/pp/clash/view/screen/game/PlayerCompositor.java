@@ -93,12 +93,12 @@ public class PlayerCompositor extends Compositor {
         } else {
             addVerticalSpace(playerTable, Dimensions.instance().getLargeSquareIconLength());
         }
-        // COMMENTED OUT AS TEST FOR P1
+        // COMMENTED OUT FOR MOVEMENT
         //playerTable.row();
     }
 
     /**
-     * TO BE TESTED
+     * Currently works
      * @param playerTable
      * @param isActive
      */

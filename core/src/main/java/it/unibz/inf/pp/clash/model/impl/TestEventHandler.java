@@ -1,6 +1,7 @@
 package it.unibz.inf.pp.clash.model.impl;
 
 import it.unibz.inf.pp.clash.model.EventHandler;
+import it.unibz.inf.pp.clash.model.snapshot.Snapshot;
 import it.unibz.inf.pp.clash.model.snapshot.impl.dummy.DummySnapshot;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor;
@@ -55,13 +56,20 @@ public class TestEventHandler implements EventHandler {
         // invert turns
         this.invertTurns();
 
+        if (this.isP1){this.currentSnap.setActivePlayer(Snapshot.Player.FIRST);}
+        else {this.currentSnap.setActivePlayer(Snapshot.Player.SECOND);}
+
+        // reset last selected cell
+        this.selectedUnit = Optional.empty();
+
         // messages
         String player = "";
         if (this.isP1){player = "P1";}
         else {player = "P2";}
         String msg = "Turn skipped;\n" + player + " now playing";
 
-        this.updateGameMsg(msg);            // UI
+        //this.updateGameMsg(msg);            // UI
+        this.updateGameUI(msg);
     }
 
 
@@ -79,13 +87,19 @@ public class TestEventHandler implements EventHandler {
         // retrieve tile(unit) and its info
         Optional<Unit> chosenUnit = this.getUnitAsOptional(rowIndex, columnIndex);
 
-        // check if selection (LX click) is the destination of a unit movement
-        if (this.isMoveSelected &&
-                this.movingUnit.isPresent() &&
-                chosenUnit.isEmpty()){
-            this.moveUnit(rowIndex, columnIndex);
-            return;
-        }
+            // PLAYER check: only select units/tiles on their side of the board
+            if (!this.areValidPlayerCoordinates(rowIndex)){
+                this.updateGameMsg("Select a valid tile (on your board side)");
+                return;
+            }
+
+            // MOVEMENT check: if selection (LX click) is the destination of a unit movement
+            if (this.isMoveSelected &&
+                    this.movingUnit.isPresent() &&
+                    chosenUnit.isEmpty()){
+                this.moveUnit(rowIndex, columnIndex);
+                return;
+            }
         
         // store unit and its coordinates (for reinforcements and movement)
         this.setSelectedUnitInfo(rowIndex, columnIndex, chosenUnit);
@@ -107,11 +121,18 @@ public class TestEventHandler implements EventHandler {
     @Override
     public void callReinforcement() {
         String msg = "";
-        // if unit already on cell: abort
-        if (this.selectedUnit.isPresent()){
-            this.updateGameMsg("Select an empty cell first");            // UI
-            return;
-        }
+
+            // PLAYER check: only select units/tiles on their side of the board
+            if (!this.areValidPlayerCoordinates(this.selectedRowIndex)){
+                this.updateGameMsg("Select a valid tile (on your board side)");
+                return;
+            }
+
+            // if unit already on cell: abort
+            if (this.selectedUnit.isPresent()){
+                this.updateGameMsg("Select an empty cell first");            // UI
+                return;
+            }
 
         // else empty cell: add reinf. unit
         Fairy tmpUnit = new Fairy(UnitColor.ONE);
@@ -132,11 +153,16 @@ public class TestEventHandler implements EventHandler {
     public void deleteUnit(int rowIndex, int columnIndex) {
         Optional<Unit> chosenUnit = this.getUnitAsOptional(rowIndex, columnIndex);
 
-        // if empty tile
-        if (chosenUnit.isEmpty()){
-            this.updateGameMsg("No unit to be removed");            // UI
-            return;
-        }
+            // 1) player check: only select units/tiles on their side of the board
+            if (!this.areValidPlayerCoordinates(rowIndex)){
+                this.updateGameMsg("Tile not valid for deletion (not on your board side)");
+                return;
+            }
+            // 2) if empty tile
+            if (chosenUnit.isEmpty()){
+                this.updateGameMsg("No unit to be removed");            // UI
+                return;
+            }
 
         // else: unit is present on tile
         this.currentSnap.getBoard().removeUnit(rowIndex, columnIndex);
@@ -245,6 +271,7 @@ public class TestEventHandler implements EventHandler {
         this.selectedUnit = chosenUnit;
         this.selectedRowIndex = rowIndex;
         this.selectedColumnIndex = columnIndex;
+        //this.currentSnap.setOngoingMove(rowIndex, columnIndex); // ongoing move (now only works as destination)
     }
 
     /**
@@ -286,5 +313,28 @@ public class TestEventHandler implements EventHandler {
                 "\nfrom cell (" + this.movingRowIndex + ", " + this.movingColumnIndex + ")" +
                 "\nto cell (" + this.selectedRowIndex + ", " + this.selectedColumnIndex + ")";
         this.updateGameUI(msg);
+    }
+
+    /**
+     * Checks if the player can select, add, or delete a unit.
+     * It relies on the y-coordinate (rowIndex)
+     * @param rowIndex row index of tile
+     * //@param columnIndex col index of tile
+     * @return whether the player is allowed to select or delete said unit/tile
+     */
+    public boolean areValidPlayerCoordinates(int rowIndex){
+
+        // col validity is always true (different story for the board implementation)
+        boolean rowValidity;
+
+        if (this.currentSnap.getActivePlayer() == Snapshot.Player.FIRST){
+            rowValidity = rowIndex <= this.currentSnap.getBoard().getMaxRowIndex() &&
+                            rowIndex >= (this.currentSnap.getBoard().getMaxRowIndex()+1)/2;
+        }
+        else {
+            rowValidity = rowIndex < (this.currentSnap.getBoard().getMaxRowIndex()+1)/2;
+        }
+
+        return rowValidity;
     }
 }
