@@ -17,6 +17,6 @@ public class MovementButtonListener extends ClickListener {
     @Override
     public void clicked(InputEvent event, float x, float y) {
         System.out.println("Movement button clicked");
-        eventHandler.moveUnit();
+        eventHandler.movementSwitch();
     }
 }

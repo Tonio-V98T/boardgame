@@ -99,7 +99,7 @@ public class DummyEventHandler implements EventHandler {
     }
 
     @Override
-    public void moveUnit(){
+    public void movementSwitch(){
         return;
     }
 }
