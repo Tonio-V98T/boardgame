@@ -71,5 +71,5 @@ public interface EventHandler {
      * <p>
      * If the move button is pressed again before the destination tile is selected, then the action is cancelled.
      */
-    void moveUnit();
+    void movementSwitch();
 }
