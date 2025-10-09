@@ -6,12 +6,19 @@ import it.unibz.inf.pp.clash.model.snapshot.impl.dummy.DummySnapshot;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor;
 import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
+import it.unibz.inf.pp.clash.model.snapshot.units.impl.Butterfly;
 import it.unibz.inf.pp.clash.model.snapshot.units.impl.Fairy;
+import it.unibz.inf.pp.clash.model.snapshot.units.impl.Unicorn;
 import it.unibz.inf.pp.clash.model.snapshot.units.impl.ZeroVoid;
 import it.unibz.inf.pp.clash.view.DisplayManager;
 import it.unibz.inf.pp.clash.view.exceptions.NoGameOnScreenException;
 
 import java.util.Optional;
+import java.util.Random;
+
+import static it.unibz.inf.pp.clash.model.snapshot.Snapshot.Player.FIRST;
+import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.ONE;
+import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.THREE;
 
 public class TestEventHandler implements EventHandler {
 
@@ -56,7 +63,7 @@ public class TestEventHandler implements EventHandler {
         // invert turns
         this.invertTurns();
 
-        if (this.isP1){this.currentSnap.setActivePlayer(Snapshot.Player.FIRST);}
+        if (this.isP1){this.currentSnap.setActivePlayer(FIRST);}
         else {this.currentSnap.setActivePlayer(Snapshot.Player.SECOND);}
 
         // reset last selected cell
@@ -134,15 +141,16 @@ public class TestEventHandler implements EventHandler {
                 return;
             }
 
-        // else empty cell: add reinf. unit
-        Fairy tmpUnit = new Fairy(UnitColor.ONE);
+        // else empty cell: add random reinforcement unit and select it
+        this.selectedUnit = this.randomReinforcement();
+
         this.currentSnap.getBoard().addUnit(this.selectedRowIndex,
                                             this.selectedColumnIndex,
-                                            tmpUnit);
-        this.selectedUnit = Optional.of(tmpUnit);   // update as last selected cell
+                                            this.selectedUnit.get());
+        //this.selectedUnit = Optional.of(tmpUnit);   // update as last selected cell
 
         // UI
-        msg = "Added " + this.unitInfo(Optional.of(tmpUnit)) +
+        msg =   "Added " + this.unitInfo(this.selectedUnit) +
                 "\nat cell (" + this.selectedRowIndex + ", " +
                 this.selectedColumnIndex + ")";
         this.updateGameUI(msg);
@@ -160,13 +168,13 @@ public class TestEventHandler implements EventHandler {
             }
             // 2) if empty tile
             if (chosenUnit.isEmpty()){
-                this.updateGameMsg("No unit to be removed");            // UI
+                this.updateGameMsg("No unit to be removed");
                 return;
             }
 
         // else: unit is present on tile
         this.currentSnap.getBoard().removeUnit(rowIndex, columnIndex);
-        // empty tile if it was also the last selected cell: this.selectedUnit = Optional.of(null);
+        // empty tile if it was also the last selected cell or moving unit
         if (chosenUnit.equals(this.selectedUnit)){this.selectedUnit = Optional.empty();}
         if (chosenUnit.equals(this.movingUnit)){this.movingUnit = Optional.empty();}
 
@@ -179,14 +187,14 @@ public class TestEventHandler implements EventHandler {
         // if movement button was already selected -> cancel action
         if (this.isMoveSelected){
             this.isMoveSelected = false;
-            this.updateGameMsg("Movement cancelled");            // UI
+            this.updateGameMsg("Movement cancelled");
             return;
         }
 
         // if no unit is selected -> exit
         if (this.selectedUnit.isEmpty() ||
                 this.selectedUnit.get() instanceof ZeroVoid) {
-            this.updateGameMsg("No unit to be moved");            // UI
+            this.updateGameMsg("No unit to be moved");
             return;
         }
 
@@ -325,16 +333,32 @@ public class TestEventHandler implements EventHandler {
     public boolean areValidPlayerCoordinates(int rowIndex){
 
         // col validity is always true (different story for the board implementation)
-        boolean rowValidity;
+        // check row validity; y-axis begins from the TOP
+        int maxRowIndexBoard = this.currentSnap.getBoard().getMaxRowIndex(); // always odd
 
-        if (this.currentSnap.getActivePlayer() == Snapshot.Player.FIRST){
-            rowValidity = rowIndex <= this.currentSnap.getBoard().getMaxRowIndex() &&
-                            rowIndex >= (this.currentSnap.getBoard().getMaxRowIndex()+1)/2;
+        if (this.currentSnap.getActivePlayer() == FIRST){
+            return rowIndex <= maxRowIndexBoard &&
+                    rowIndex >= (maxRowIndexBoard+1)/2;     // P1: (half of max):max
         }
         else {
-            rowValidity = rowIndex < (this.currentSnap.getBoard().getMaxRowIndex()+1)/2;
+            return rowIndex < (maxRowIndexBoard+1)/2;               // P2: 0:(half of max -1)
         }
+    }
 
-        return rowValidity;
+    /**
+     * TMP
+     * Creates a random optional(unit) out of three units.
+     * Called in the outer method callReinforcement()
+     * @return the random optional(unit)
+     */
+    public Optional<Unit> randomReinforcement(){
+        Fairy fairy = new Fairy(UnitColor.ONE);
+        Unicorn unicorn = new Unicorn(UnitColor.THREE);
+        Butterfly butterfly = new Butterfly(UnitColor.TWO);
+
+        Unit[] unitArray = {fairy, unicorn, butterfly};
+        int rndmIndex = new Random().nextInt(unitArray.length);
+
+        return Optional.of(unitArray[rndmIndex]);
     }
 }
