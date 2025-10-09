@@ -1,16 +1,24 @@
 package it.unibz.inf.pp.clash.model.impl;
 
 import it.unibz.inf.pp.clash.model.EventHandler;
+import it.unibz.inf.pp.clash.model.snapshot.Snapshot;
 import it.unibz.inf.pp.clash.model.snapshot.impl.dummy.DummySnapshot;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor;
 import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
+import it.unibz.inf.pp.clash.model.snapshot.units.impl.Butterfly;
 import it.unibz.inf.pp.clash.model.snapshot.units.impl.Fairy;
+import it.unibz.inf.pp.clash.model.snapshot.units.impl.Unicorn;
 import it.unibz.inf.pp.clash.model.snapshot.units.impl.ZeroVoid;
 import it.unibz.inf.pp.clash.view.DisplayManager;
 import it.unibz.inf.pp.clash.view.exceptions.NoGameOnScreenException;
 
 import java.util.Optional;
+import java.util.Random;
+
+import static it.unibz.inf.pp.clash.model.snapshot.Snapshot.Player.FIRST;
+import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.ONE;
+import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.THREE;
 
 public class TestEventHandler implements EventHandler {
 
@@ -55,13 +63,20 @@ public class TestEventHandler implements EventHandler {
         // invert turns
         this.invertTurns();
 
+        if (this.isP1){this.currentSnap.setActivePlayer(FIRST);}
+        else {this.currentSnap.setActivePlayer(Snapshot.Player.SECOND);}
+
+        // reset last selected cell
+        this.selectedUnit = Optional.empty();
+
         // messages
         String player = "";
         if (this.isP1){player = "P1";}
         else {player = "P2";}
         String msg = "Turn skipped;\n" + player + " now playing";
 
-        this.updateGameMsg(msg);            // UI
+        //this.updateGameMsg(msg);            // UI
+        this.updateGameUI(msg);
     }
 
 
@@ -79,13 +94,19 @@ public class TestEventHandler implements EventHandler {
         // retrieve tile(unit) and its info
         Optional<Unit> chosenUnit = this.getUnitAsOptional(rowIndex, columnIndex);
 
-        // check if selection (LX click) is the destination of a unit movement
-        if (this.isMoveSelected &&
-                this.movingUnit.isPresent() &&
-                chosenUnit.isEmpty()){
-            this.moveUnit(rowIndex, columnIndex);
-            return;
-        }
+            // PLAYER check: only select units/tiles on their side of the board
+            if (!this.areValidPlayerCoordinates(rowIndex)){
+                this.updateGameMsg("Select a valid tile (on your board side)");
+                return;
+            }
+
+            // MOVEMENT check: if selection (LX click) is the destination of a unit movement
+            if (this.isMoveSelected &&
+                    this.movingUnit.isPresent() &&
+                    chosenUnit.isEmpty()){
+                this.moveUnit(rowIndex, columnIndex);
+                return;
+            }
         
         // store unit and its coordinates (for reinforcements and movement)
         this.setSelectedUnitInfo(rowIndex, columnIndex, chosenUnit);
@@ -107,21 +128,29 @@ public class TestEventHandler implements EventHandler {
     @Override
     public void callReinforcement() {
         String msg = "";
-        // if unit already on cell: abort
-        if (this.selectedUnit.isPresent()){
-            this.updateGameMsg("Select an empty cell first");            // UI
-            return;
-        }
 
-        // else empty cell: add reinf. unit
-        Fairy tmpUnit = new Fairy(UnitColor.ONE);
+            // PLAYER check: only select units/tiles on their side of the board
+            if (!this.areValidPlayerCoordinates(this.selectedRowIndex)){
+                this.updateGameMsg("Select a valid tile (on your board side)");
+                return;
+            }
+
+            // if unit already on cell: abort
+            if (this.selectedUnit.isPresent()){
+                this.updateGameMsg("Select an empty cell first");            // UI
+                return;
+            }
+
+        // else empty cell: add random reinforcement unit and select it
+        this.selectedUnit = this.randomReinforcement();
+
         this.currentSnap.getBoard().addUnit(this.selectedRowIndex,
                                             this.selectedColumnIndex,
-                                            tmpUnit);
-        this.selectedUnit = Optional.of(tmpUnit);   // update as last selected cell
+                                            this.selectedUnit.get());
+        //this.selectedUnit = Optional.of(tmpUnit);   // update as last selected cell
 
         // UI
-        msg = "Added " + this.unitInfo(Optional.of(tmpUnit)) +
+        msg =   "Added " + this.unitInfo(this.selectedUnit) +
                 "\nat cell (" + this.selectedRowIndex + ", " +
                 this.selectedColumnIndex + ")";
         this.updateGameUI(msg);
@@ -132,15 +161,20 @@ public class TestEventHandler implements EventHandler {
     public void deleteUnit(int rowIndex, int columnIndex) {
         Optional<Unit> chosenUnit = this.getUnitAsOptional(rowIndex, columnIndex);
 
-        // if empty tile
-        if (chosenUnit.isEmpty()){
-            this.updateGameMsg("No unit to be removed");            // UI
-            return;
-        }
+            // 1) player check: only select units/tiles on their side of the board
+            if (!this.areValidPlayerCoordinates(rowIndex)){
+                this.updateGameMsg("Tile not valid for deletion (not on your board side)");
+                return;
+            }
+            // 2) if empty tile
+            if (chosenUnit.isEmpty()){
+                this.updateGameMsg("No unit to be removed");
+                return;
+            }
 
         // else: unit is present on tile
         this.currentSnap.getBoard().removeUnit(rowIndex, columnIndex);
-        // empty tile if it was also the last selected cell: this.selectedUnit = Optional.of(null);
+        // empty tile if it was also the last selected cell or moving unit
         if (chosenUnit.equals(this.selectedUnit)){this.selectedUnit = Optional.empty();}
         if (chosenUnit.equals(this.movingUnit)){this.movingUnit = Optional.empty();}
 
@@ -153,14 +187,14 @@ public class TestEventHandler implements EventHandler {
         // if movement button was already selected -> cancel action
         if (this.isMoveSelected){
             this.isMoveSelected = false;
-            this.updateGameMsg("Movement cancelled");            // UI
+            this.updateGameMsg("Movement cancelled");
             return;
         }
 
         // if no unit is selected -> exit
         if (this.selectedUnit.isEmpty() ||
                 this.selectedUnit.get() instanceof ZeroVoid) {
-            this.updateGameMsg("No unit to be moved");            // UI
+            this.updateGameMsg("No unit to be moved");
             return;
         }
 
@@ -245,6 +279,7 @@ public class TestEventHandler implements EventHandler {
         this.selectedUnit = chosenUnit;
         this.selectedRowIndex = rowIndex;
         this.selectedColumnIndex = columnIndex;
+        //this.currentSnap.setOngoingMove(rowIndex, columnIndex); // ongoing move (now only works as destination)
     }
 
     /**
@@ -286,5 +321,44 @@ public class TestEventHandler implements EventHandler {
                 "\nfrom cell (" + this.movingRowIndex + ", " + this.movingColumnIndex + ")" +
                 "\nto cell (" + this.selectedRowIndex + ", " + this.selectedColumnIndex + ")";
         this.updateGameUI(msg);
+    }
+
+    /**
+     * Checks if the player can select, add, or delete a unit.
+     * It relies on the y-coordinate (rowIndex)
+     * @param rowIndex row index of tile
+     * //@param columnIndex col index of tile
+     * @return whether the player is allowed to select or delete said unit/tile
+     */
+    public boolean areValidPlayerCoordinates(int rowIndex){
+
+        // col validity is always true (different story for the board implementation)
+        // check row validity; y-axis begins from the TOP
+        int maxRowIndexBoard = this.currentSnap.getBoard().getMaxRowIndex(); // always odd
+
+        if (this.currentSnap.getActivePlayer() == FIRST){
+            return rowIndex <= maxRowIndexBoard &&
+                    rowIndex >= (maxRowIndexBoard+1)/2;     // P1: (half of max):max
+        }
+        else {
+            return rowIndex < (maxRowIndexBoard+1)/2;               // P2: 0:(half of max -1)
+        }
+    }
+
+    /**
+     * TMP
+     * Creates a random optional(unit) out of three units.
+     * Called in the outer method callReinforcement()
+     * @return the random optional(unit)
+     */
+    public Optional<Unit> randomReinforcement(){
+        Fairy fairy = new Fairy(UnitColor.ONE);
+        Unicorn unicorn = new Unicorn(UnitColor.THREE);
+        Butterfly butterfly = new Butterfly(UnitColor.TWO);
+
+        Unit[] unitArray = {fairy, unicorn, butterfly};
+        int rndmIndex = new Random().nextInt(unitArray.length);
+
+        return Optional.of(unitArray[rndmIndex]);
     }
 }

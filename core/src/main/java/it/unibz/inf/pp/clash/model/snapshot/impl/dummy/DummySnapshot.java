@@ -75,8 +75,8 @@ public class DummySnapshot extends AbstractSnapshot implements Snapshot {
     public int getSizeOfReinforcement(Player player) {
 
         if (player == Player.FIRST) {
-            return 5;
+            return 3;
         }
-        return 2;
+        return 3;
     }
 }

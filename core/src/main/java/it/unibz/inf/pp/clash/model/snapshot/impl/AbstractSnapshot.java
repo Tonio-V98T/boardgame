@@ -55,4 +55,14 @@ public abstract class AbstractSnapshot implements Snapshot {
         return actionsRemaining;
     }
 
+    /**
+     * Testing
+     */
+    public void setActivePlayer(Player player){
+        this.activeplayer = player;
+    }
+
+    public void setOngoingMove(int rowIndex, int columnIndex){
+        this.ongoingMove = new TileCoordinates(rowIndex, columnIndex);
+    }
 }
