@@ -14,6 +14,7 @@ import it.unibz.inf.pp.clash.view.singletons.ImageManager;
 import it.unibz.inf.pp.clash.view.singletons.SkinManager;
 
 import java.util.Optional;
+import java.util.Random;
 
 public class DisplayManagerImpl extends Game implements DisplayManager {
 
@@ -53,11 +54,24 @@ public class DisplayManagerImpl extends Game implements DisplayManager {
         FontManager.instance().dispose();
     }
 
+
+    private String motivationMessage(){
+        String [] motivationalMessages = {
+                "You are a loser",
+                "You can win now",
+                "Really? this is the best move ever",
+                "Daje Daje"
+        };
+        int rnd = new Random().nextInt(motivationalMessages.length);
+        return motivationalMessages[rnd] + "\n";
+    }
+
     @Override
     public void updateMessage(String message) throws NoGameOnScreenException {
         if(gameScreen == null || getScreen() != gameScreen){
             throw new NoGameOnScreenException();
         }
+        message = this.motivationMessage() + message;
         gameScreen.updateMessage(message);
     }
 
@@ -71,6 +85,7 @@ public class DisplayManagerImpl extends Game implements DisplayManager {
             );
             setScreen(gameScreen);
         }
+        message = this.motivationMessage() + message;
         gameScreen.drawSnapshot(snapshot, message);
     }
 
