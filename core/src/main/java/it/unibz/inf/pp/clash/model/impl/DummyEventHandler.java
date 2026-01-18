@@ -102,4 +102,9 @@ public class DummyEventHandler implements EventHandler {
     public void movementSwitch(){
         return;
     }
+
+    @Override
+    public void attackSwitch(){
+        return;
+    }
 }

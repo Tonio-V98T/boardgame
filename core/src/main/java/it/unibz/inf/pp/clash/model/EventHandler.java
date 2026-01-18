@@ -72,4 +72,16 @@ public interface EventHandler {
      * If the move button is pressed again before the destination tile is selected, then the action is cancelled.
      */
     void movementSwitch();
+
+    /**
+     * This method is called when the user wants to attack a unit, causing it damage
+     * For it to work, the user must first select a tile with a unit on it,
+     * which becomes the attacking unit.
+     * <p>
+     * This method only signals that the selected unit is ready to attack.
+     * To complete the attack, the user must click on a target (defending) unit.
+     * <p>
+     * If the attack button is pressed again before the destination tile is selected, then the action is cancelled.
+     */
+    void attackSwitch();
 }

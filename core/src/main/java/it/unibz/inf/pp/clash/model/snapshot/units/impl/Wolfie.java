@@ -7,18 +7,20 @@ public class Wolfie implements MobileUnit {
     int health;
     UnitColor color;
 
-    //???
     int attackCountdown;
+    int attackDamage;
 
     public Wolfie(){
         this.health = 3;
         this.color = UnitColor.TWO;
         this.attackCountdown = 0;
+        this.attackDamage = 2;
     }
     public Wolfie(UnitColor color){
         this.health = 3;
         this.color = color;
         this.attackCountdown = 0;
+        this.attackDamage = 2;
     }
 
     @Override
@@ -35,6 +37,9 @@ public class Wolfie implements MobileUnit {
     public void setAttackCountdown(int attackCountDown) {
         this.attackCountdown = attackCountDown;
     }
+
+    @Override
+    public int getAttackDamage(){return this.attackDamage;}
 
     @Override
     public int getHealth() {

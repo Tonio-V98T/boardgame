@@ -35,7 +35,7 @@ import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor;
  */
 public class ImageManager {
 
-    public enum Icon{HEART, COUNTDOWN, SWORDS, REINFORCEMENT, SKIP, EXIT, MOVE}
+    public enum Icon{HEART, COUNTDOWN, SWORDS, REINFORCEMENT, SKIP, EXIT, MOVE, ATTACK}
 
     public enum IconSize{SMALL, MEDIUM, LARGE}
 
