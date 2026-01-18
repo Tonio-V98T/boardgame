@@ -22,4 +22,9 @@ public interface MobileUnit extends Unit {
      * scheduled for this unit.
      */
     void setAttackCountdown(int attackCountDown);
+
+    /**
+     * @return The damage that the unit can inflict to an enemy unit or player
+     */
+    int getAttackDamage();
 }

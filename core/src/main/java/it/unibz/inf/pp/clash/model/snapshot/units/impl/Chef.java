@@ -3,17 +3,16 @@ package it.unibz.inf.pp.clash.model.snapshot.units.impl;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 
 public class Chef implements MobileUnit {
-    int getAttackCountdown;
     int health;
     UnitColor colour;
     private int attackCountdown;
+    int attackDamage;
 
     public Chef(){
         this.health = 10;
         this.colour = UnitColor.ONE;
-        this.getAttackCountdown = 0;
-
-
+        this.attackCountdown = 0;
+        this.attackDamage = 2;
     }
 
 
@@ -29,9 +28,11 @@ public class Chef implements MobileUnit {
 
     @Override
     public void setAttackCountdown(int attackCountDown) {
-        this.attackCountdown = attackCountdown;
-
+        this.attackCountdown = attackCountDown;
     }
+
+    @Override
+    public int getAttackDamage(){return this.attackDamage;}
 
     @Override
     public int getHealth() {

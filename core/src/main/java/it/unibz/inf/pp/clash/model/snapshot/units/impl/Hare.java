@@ -9,12 +9,13 @@ import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
         int health;
         UnitColor colour;
         private int attackCountdown;
+        int attackDamage;
 
         public Hare() {
             this.health = 5;
             this.colour = UnitColor.ONE;
             this.attackCountdown = 0;
-
+            this.attackDamage = 2;
         }
 
         @Override
@@ -31,6 +32,9 @@ import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
         public void setAttackCountdown(int attackCountDown) {
             this.attackCountdown = attackCountDown;
         }
+
+        @Override
+        public int getAttackDamage(){return this.attackDamage;}
 
         @Override
         public int getHealth() {

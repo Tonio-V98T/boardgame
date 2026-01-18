@@ -6,10 +6,7 @@ import it.unibz.inf.pp.clash.model.snapshot.impl.dummy.DummySnapshot;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor;
 import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
-import it.unibz.inf.pp.clash.model.snapshot.units.impl.Butterfly;
-import it.unibz.inf.pp.clash.model.snapshot.units.impl.Fairy;
-import it.unibz.inf.pp.clash.model.snapshot.units.impl.Unicorn;
-import it.unibz.inf.pp.clash.model.snapshot.units.impl.ZeroVoid;
+import it.unibz.inf.pp.clash.model.snapshot.units.impl.*;
 import it.unibz.inf.pp.clash.view.DisplayManager;
 import it.unibz.inf.pp.clash.view.exceptions.NoGameOnScreenException;
 
@@ -35,6 +32,12 @@ public class TestEventHandler implements EventHandler {
         private Optional<Unit> movingUnit = Optional.of(new ZeroVoid());
         private int movingRowIndex;
         private int movingColumnIndex;
+
+        private boolean isAttackSelected = false;
+        private Optional<MobileUnit> attackingUnit;
+        private int attackingRowIndex;
+        private int attackingColumnIndex;
+        private int attackerDamage;
 
     public TestEventHandler(DisplayManager displayManager) {
         this.DM = displayManager;
@@ -107,6 +110,14 @@ public class TestEventHandler implements EventHandler {
                 this.moveUnit(rowIndex, columnIndex);
                 return;
             }
+
+            // ATTACK check: if selected target (LX) is the destination of a unit attack
+            if (this.isAttackSelected &&
+                    this.attackingUnit.isPresent() &&
+                    chosenUnit.isPresent()){
+                this.attackUnit(rowIndex, columnIndex, chosenUnit);
+                return;
+            }
         
         // store unit and its coordinates (for reinforcements and movement)
         this.setSelectedUnitInfo(rowIndex, columnIndex, chosenUnit);
@@ -120,6 +131,11 @@ public class TestEventHandler implements EventHandler {
             msg = "Cannot move: " + this.unitInfo(chosenUnit) + "\nwas deleted";
             this.isMoveSelected = false;
         }
+
+        // UI (LX click, no attack)
+
+
+        // UI (DEFAULT)
         else {msg = "Selected " + this.unitInfo(chosenUnit);}
         this.updateGameMsg(msg);            // UI (left click)
     }
@@ -202,6 +218,88 @@ public class TestEventHandler implements EventHandler {
         this.isMoveSelected = true;
         this.setMovingUnitInfo(this.selectedRowIndex, this.selectedColumnIndex, this.selectedUnit);
         this.updateGameMsg("Please select a destination tile");            // UI
+    }
+
+    public void attackSwitch(){
+        // suppose to use a button, as with movement
+        // thus, starting point is the selected unit
+
+        // if switch already true -> turn off attack
+        if (this.isAttackSelected){
+            this.isAttackSelected = false;
+            this.updateGameMsg("Attack cancelled");
+            return;
+        }
+
+        // EMPTY tile check -> exit
+        if (this.selectedUnit.isEmpty()){
+            this.updateGameMsg("Select a unit before declaring the attack");
+            return;
+        }
+
+        // STATIC unit check -> exit
+        if (!(this.selectedUnit.get() instanceof MobileUnit mobile)){
+            this.updateGameMsg("A static unit can't attack");
+            return;
+        }
+
+        // else -> check atkCountdown
+        // if 0 -> turn attack switch on
+        int attackCountdown = mobile.getAttackCountdown();
+        if (attackCountdown != 0){
+            this.updateGameMsg("This unit's attack countdown isn't zero yet");
+            return;
+        }
+
+        this.isAttackSelected = true;
+        this.attackingUnit = Optional.of(mobile);
+        //this.attackerDamage = mobile.getAttackDamage();
+        this.attackingRowIndex = this.selectedRowIndex;
+        this.attackingColumnIndex = this.selectedColumnIndex;
+        this.attackerDamage = this.attackingUnit.get().getAttackDamage();
+        this.updateGameMsg("Choose unit or player to attack");
+    }
+
+    public void attackUnit(int rowIndex, int columnIndex, Optional<Unit> chosenUnit){
+
+        // TODO: should only target the oppo's units
+
+        // even allowing for infighting, it should still not attack itself
+        //if (this.attackingUnit.equals(this.selectedUnit)){
+            // exit
+        //}
+
+
+        // deal damage to unit (health - damage)
+        int defendingUnitHealth = chosenUnit.get().getHealth();
+
+        chosenUnit.get().setHealth(defendingUnitHealth - this.attackerDamage);
+
+        // subtract 1 HP from opposing player
+
+        // reset attackCountdown for the attacking unit
+        this.attackingUnit.get().setAttackCountdown(3);
+
+        // update UI
+        String msg = this.unitInfo(Optional.of(this.attackingUnit.get())) +
+                "\non cell (" + this.attackingRowIndex + ", " + this.attackingColumnIndex + ")" +
+                "\nattacked" +
+                this.unitInfo(chosenUnit) +
+                "\non cell (" + rowIndex + ", " + columnIndex + ")";
+        this.updateGameUI(msg);
+
+        // if unit's health is zero or less -> delete
+        // remember: because the attack takes priority,
+        // the target was not set as selectedUnit
+        // TODO: why does it not disappear?
+        if (defendingUnitHealth <= 0){
+            //this.deleteUnit(rowIndex, columnIndex);
+            this.currentSnap.getBoard().removeUnit(rowIndex, columnIndex);
+        }
+
+        // turn attack off and attacker to non-attacking state (set to empty)
+        this.isAttackSelected = false;
+        this.attackingUnit = Optional.empty();
     }
 
     /*

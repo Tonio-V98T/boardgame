@@ -2,6 +2,7 @@ package it.unibz.inf.pp.clash.view.screen.game;
 
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import it.unibz.inf.pp.clash.controller.listeners.MovementButtonListener;
+import it.unibz.inf.pp.clash.controller.listeners.AttackButtonListener;
 import it.unibz.inf.pp.clash.controller.listeners.ReinforcementButtonListener;
 import it.unibz.inf.pp.clash.controller.listeners.SkipTurnButtonListener;
 import it.unibz.inf.pp.clash.model.EventHandler;
@@ -48,6 +49,7 @@ public class PlayerCompositor extends Compositor {
                 // BEGIN TEST
                 //addSmallHorizontalSpace(playerTable);               // TEST
                 addMovementButton(playerTable, firstPlayerActive);  // TEST
+                addAttackButton(playerTable, firstPlayerActive);
                 // END TEST
                 addMediumVerticalSpace(playerTable);                // was large
                 addCountdown(previousSnapshot, newSnapshot, playerTable, firstPlayerActive);
@@ -72,6 +74,7 @@ public class PlayerCompositor extends Compositor {
                 addSkipTurnButton(playerTable, !firstPlayerActive);
                 // BEGIN TEST
                 addMovementButton(playerTable, !firstPlayerActive);
+                addAttackButton(playerTable, !firstPlayerActive);
                 //addMediumVerticalSpace(playerTable); // currently too large with vertical spaces. why?
                 // END TEST
                 addSmallVerticalSpace(playerTable);                 // was large
@@ -106,6 +109,26 @@ public class PlayerCompositor extends Compositor {
         if(isActive) {
             ImageButton button = getImageButton(MOVE, LARGE, false);
             button.addListener(new MovementButtonListener(eventHandler));
+            addSquareImageButton(
+                    playerTable,
+                    button,
+                    Dimensions.instance().getLargeSquareIconLength()
+            );
+        } else {
+            addVerticalSpace(playerTable, Dimensions.instance().getLargeSquareIconLength());
+        }
+        playerTable.row();
+    }
+
+    /**
+     * Add image, and test it!
+     * @param playerTable
+     * @param isActive
+     */
+    private void addAttackButton(Table playerTable, boolean isActive){
+        if(isActive) {
+            ImageButton button = getImageButton(ATTACK, LARGE, false);
+            button.addListener(new AttackButtonListener(eventHandler));
             addSquareImageButton(
                     playerTable,
                     button,

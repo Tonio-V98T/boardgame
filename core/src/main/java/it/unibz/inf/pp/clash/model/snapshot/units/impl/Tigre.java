@@ -7,14 +7,14 @@ public class Tigre implements MobileUnit {
     int health;
     UnitColor color;
 
-
     int attackCountdown;
+    int attackDamage;
 
     public Tigre (){
         this.health = 10;
         this.color = UnitColor.THREE;
         this.attackCountdown = 4;
-
+        this.attackDamage = 3;
     }
 
     @Override
@@ -31,6 +31,9 @@ public class Tigre implements MobileUnit {
     public void setAttackCountdown(int attackCountDown) {
         this.attackCountdown = attackCountDown;
     }
+
+    @Override
+    public int getAttackDamage(){return this.attackDamage;}
 
     @Override
     public int getHealth() {
