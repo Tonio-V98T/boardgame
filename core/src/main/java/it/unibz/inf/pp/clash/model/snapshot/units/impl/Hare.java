@@ -12,10 +12,10 @@ import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
         int attackDamage;
 
         public Hare() {
-            this.health = 5;
-            this.colour = UnitColor.ONE;
+            this.health = 2;
+            this.colour = UnitColor.ZERO;
             this.attackCountdown = 0;
-            this.attackDamage = 2;
+            this.attackDamage = 3;
         }
 
         @Override

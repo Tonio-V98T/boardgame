@@ -1,11 +1,11 @@
 # ANIMA: Of chanting beasts
 
-This repository contains a basic graphical user interface for games with mechanics analogous to the ones of
-[Might & Magic: Clash of Heroes](https://www.dotemu.com/games/might-magic-clash-of-heroes-definitive-edition/) or
-[Legend of Solgard](https://snowprintstudios.com/solgard/).
+Simple GUI game intended to be played one Vs. one, on a single board.
+Each player has a team composed of three unit types: wolf, hare, and tiger.
+Players can move their units along a grid; attack other units; and call for reinforcements.
 
-The graphical interface uses the [libGDX](https://libgdx.com/) library.\
-All images were downloaded from [Game-icons.net](https://game-icons.net/).
+The game is still in development, and it can hardly be considered as finished.
+Nonetheless, working on this project taught me so much (not only on software development), that I still decided to submit this Beta.
 
 ## (Updated) Requirements
 
@@ -35,7 +35,7 @@ gradle wrapper
 .\gradlew.bat run
 ```
 
-#### Running the unit tests
+#### Running the unit tests (Not implemented yet)
 
 - on macOS/Linux:
 
@@ -53,40 +53,23 @@ gradle wrapper
 ### With an IDE
 Open this repository as a Gradle project.
 
-Then to start the application, run the method [DesktopLauncher.main](desktop/src/it/unibz/inf/pp/clash/DesktopLauncher.java)
-  (in your running configuration, you may need to specify `assets` as the Java working directory).
+Then to start the application, run the method [TestLauncher.main](desktop/src/it/unibz/inf/pp/clash/TestLauncher.java)
+  (in your running configuration, you may need to specify `assets` as the Java working directory, as LibGDX performs some strange black magic...).
 
-On macOS, you may need to add `-XstartOnFirstThread` as a JVM option.
+On macOS, you may need to add `-XstartOnFirstThread` as a JVM option (Apple Silicon requires the graphics to run on the main thread).
 
 ## Design
 
-### Game snapshot
+### Game snapshot and board
 
-The project is designed around the notion of game _snapshot_.\
-A snapshot is an object that intuitively stores all the information needed to resume an interrupted game (state of the board, remaining health, active player, etc.).\
-In other words, you can think of a snapshot as a save state.
+The project is designed around the notion of game _snapshot_.\, which can be thought of as a save state.
+It contains information about the player stats and the entities on the board.
 
-- The [Snapshot](core/src/main/java/it/unibz/inf/pp/clash/model/snapshot/Snapshot.java) Java interface specifies which information a snapshot should contain.\
-  The documentation of this interface
-  (and the interfaces that it refers to, transitively) should be sufficient for you to understand what a snapshot is.\
-  In particular:
+Rules and structure of the board are implemented through the interface [Board](core/src/main/java/it/unibz/inf/pp/clash/model/snapshot/Board.java).\
+A board is a rectangular grid.
+Rows and columns on the board are indexed from left to right and top to bottom, with natural numbers, starting at index 0.
+So the upper-left tile has index (0,0)
 
-  - The method [Snapshot.getBoard](core/src/main/java/it/unibz/inf/pp/clash/model/snapshot/Snapshot.java)
-    should return the current board.
-
-  - A board must in turn implement the interface [Board](core/src/main/java/it/unibz/inf/pp/clash/model/snapshot/Board.java).\
-    A board is a rectangular grid.
-    Rows and columns on the board are indexed from left to right and top to bottom, with natural numbers, starting at index 0.
-    So the upper-left tile has index (0,0)
-
-    _Note_: several (adjacent) tiles may be occupied by the same unit (i.e. by the same Java object).
-
-  - A unit must implement the interface [Unit](core/src/main/java/it/unibz/inf/pp/clash/model/snapshot/units/Unit.java).\
-    You will find several implementations of this interface ([Unicorn](core/src/main/java/it/unibz/inf/pp/clash/model/snapshot/units/impl/Unicorn.java), etc.).
-    Feel free to modify them and/or add your own.
-
-- The project only contains a [dummy implementation](core/src/main/java/it/unibz/inf/pp/clash/model/impl/dummy/snapshot/DummySnapshot.java) of the Snapshot interface.\
-  _Tip:_ in order to implement it properly, you can create a class that extends the abstract class [AbstractSnapshot](core/src/main/java/it/unibz/inf/pp/clash/model/snapshot/impl/AbstractSnapshot.java).
 
 ### Model-view-controller
 
@@ -96,82 +79,53 @@ This means that the code is partitioned into three components called
 [view](core/src/main/java/it/unibz/inf/pp/clash/view/README.md) and
 [controller](core/src/main/java/it/unibz/inf/pp/clash/controller/README.md):
 
-- The _controller_ registers the user actions (click, hovering, etc.), and notifies the model of each action.
-- The _model_ is the core of the application.
-  It keeps track of the state of the game and updates it after each action.
+- The _model_ is the core of the application, implemented as an [Event Handler](core/src/main/java/it/unibz/inf/pp/clash/model/EventHandler.java).
+  It keeps track of the state of the game (Snapshot) and updates it after each action.
   The model takes its input from the controller, and outputs drawing instructions to the view.
+- The _controller_ registers the user actions (left and right click, hovering), and notifies the model of each action.
+  It is implemented through [Listeners](core/src/main/java/it/unibz/inf/pp/clash/controller/listeners).
 - The _view_ is in charge of drawing the game on screen. It takes its input from the model.
+  It is not fancy, as it is implemented with an old imperative-like approach, rather than a declarative one.
 
-_Note:_ This is not the most common interpretation of the MVC pattern: in many applications, the model remains passive,
-whereas in this project the model gives instructions to the view.
+## How to play
+The game is played in turns. During their own turn, a player can do one of the following actions:
 
-## How to implement your own game
+- Move of their units to a destination tile (LX click + Move button);
+- Attack another unit (LX click + Attack button);
+- Remove one of their units (RX click).
 
-The controller and the view components (a.k.a. the graphical interface) are already implemented.
-So In order to develop your own game, you only need to implement the model (i.e. the mechanics of the game).\
-To this end, you can modify and extend the content of the folder [model](core/src/main/java/it/unibz/inf/pp/clash/model/README.md).
+When a player is done, they can pass the turn with the Skip button.
 
-Your code only needs to respect the interfaces that specify:
+Currently, the game board is more of a playground for testing interactions.
+More rules would need to be implemented (decreasing attack countdown, attacking the opponent, etc...).
 
-- how the controller communicates with the model, and
-- how the model communicates with the view.
 
-Here is a brief description of these two interfaces:
+## Lessons on a more technical level
+Many lessons had to be learnt from a development viewpoint:
+- The complexity of a Gradle project, especially one focused on LibGDX -> learning how the various components interact with each other;
+- Understanding the code written by another developer, i.e., what structures and functions they used;
+- the importance (and extensive, pre-existing usage) of the "super" keyword in OOP.
 
-#### The controller-model interface
 
-- The [EventHandler](core/src/main/java/it/unibz/inf/pp/clash/model/EventHandler.java) Java interface specifies how the controller
-  notifies the model of user actions.\
-  For instance, when the user clicks on the "exit game" button, the controller calls the method
-  [EventHandler.exitGame](core/src/main/java/it/unibz/inf/pp/clash/model/EventHandler.java).
+## Experiences learnt on the way
 
-- Your primary task is to implement the methods of the [EventHandler](core/src/main/java/it/unibz/inf/pp/clash/model/EventHandler.java) interface.\
-  For now, the code only contains a [dummy implementation](core/src/main/java/it/unibz/inf/pp/clash/model/impl/DummyEventHandler.java).
-  You should instead create your own class that implements this interface.\
-  After creating this class, you can incorporate it to the project as follows:
-  in the method [DesktopLauncher.main](desktop/src/it/unibz/inf/pp/clash/DesktopLauncher.java), replace the instruction
+The biggest difficulties are always two:
 
-```Java
-        EventHandler eventHandler = new DummyEventHandler(displayManager);
-```
+- Understanding what was written by another developer, i.e., changing your own mental framework to that of another person;
+- Teamwork, i.e., sharing thoughts and opinions with other people, so that work might be collaborative. 
 
-with
 
-```Java
-        EventHandler eventHandler = new MyEventHandler(displayManager);
-```
+## About the team
 
-where `MyEventHandler` is the name of your class.
+Three team members:
 
-#### The model-view interface
+- Boutaj Fatima Ezahra (BouFatimaunibz). Added "Tigre" unit class, and "Boardprova".
+- Kyeremeth Nana (NKRMH). Added "Hare" and "Chef" unit classes.
+- Antonio Piscitelli (Tonio-V98T) (APiscitelli). 
+Because of an early mistake (and a non-collaborating Git Bash), I pushed commits with both my GitHub account (Tonio-V98T),
+and a local account (APiscitelli). Implemented graphics (under view and assets), player input (new listeners),
+basic game logic (snapshot, board, event handler), and the desktop launcher. Cleaned some code along the way, and changed some other stuff (as reflected in the various commits and PRs). 
 
-- The [DisplayManager](core/src/main/java/it/unibz/inf/pp/clash/view/DisplayManager.java) Java interface specifies how the model
-  provides drawing instructions to the view.
-  This interface is already implemented (with the class [DisplayManagerImpl](core/src/main/java/it/unibz/inf/pp/clash/view/impl/DisplayManagerImpl.java)), as part of the view component.
-  You can implement a fully functional game without modifying this implementation.
-
-- In particular, you can draw a snapshot on screen by calling the instance method [DisplayManager.drawSnapshot](core/src/main/java/it/unibz/inf/pp/clash/view/DisplayManager.java)
-  (with your snapshot as argument).\
-  If there was another snapshot on screen prior to this call, then the two snapshots will be compared and their differences highlighted,
-  with a fade-in animation.\
-  Use these animations to notify the user of the effects of his actions.\
-  Note that sending snapshots during an animation will not interrupt it.
-  Instead, your snapshots will be buffered, and displayed after all pending animations have terminated.
-
-## To go further
-
-You can implement a fully functional game (player VS player and/or player VS bot) by modifying the model component only,
-without altering the code in the
-[view](core/src/main/java/it/unibz/inf/pp/clash/view/README.md) or
-[controller](core/src/main/java/it/unibz/inf/pp/clash/controller/README.md) folders.
-
-However, you may also want to modify the graphical interface:
-
-- Duration of fade-in animations can be set (as a number of seconds, possibly with decimals) in the property file [config.properties](assets/config.properties).
-- For (lightweight) aesthetic customization (e.g. changing colors),
-  you can edit some of the other property files of the project.
-  They are all located in the `assets` folder, and their precise locations are listed in the [FileManager](core/src/main/java/it/unibz/inf/pp/clash/view/singletons/FileManager.java) class.\
-  You can also add your own (.png) images under `assets/images/png`:
-  place the images in the appropriate subfolders (the folder structure should be self-explanatory),
-  and reference them in the appropriate property files (e.g. in [this file](assets/images/portraits.properties) for the portrait of a hero).
-- For more advanced customization, you can follow [online tutorials](https://libgdx.com/wiki/start/demos-and-tutorials) about LibGDX.
+This project is still in Beta, and will be submitted nonetheless.
+However, I wish this would have been a _team_ project, not a solo one...
+To this day, I am still not aware why the other members silently decided to abandon the project at its inception.

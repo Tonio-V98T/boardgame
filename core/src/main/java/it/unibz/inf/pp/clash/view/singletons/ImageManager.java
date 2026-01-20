@@ -180,7 +180,8 @@ public class ImageManager {
     private static final Map<MobileUnit.UnitColor, String> colorToSubfolder = Map.of(
             ONE, "color_one/",
             TWO, "color_two/",
-            THREE, "color_three/"
+            THREE, "color_three/",
+            ZERO, ""        // test for default color -> loads no specific directory
     );
 
     // Keeps track of all created pixmaps, for performance only (so that they can be freed).

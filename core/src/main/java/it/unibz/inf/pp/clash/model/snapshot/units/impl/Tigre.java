@@ -11,8 +11,8 @@ public class Tigre implements MobileUnit {
     int attackDamage;
 
     public Tigre (){
-        this.health = 10;
-        this.color = UnitColor.THREE;
+        this.health = 4;
+        this.color = UnitColor.ZERO;
         this.attackCountdown = 4;
         this.attackDamage = 3;
     }
