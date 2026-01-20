@@ -2,7 +2,7 @@ package it.unibz.inf.pp.clash.model.impl;
 
 import it.unibz.inf.pp.clash.model.EventHandler;
 import it.unibz.inf.pp.clash.model.snapshot.Snapshot;
-import it.unibz.inf.pp.clash.model.snapshot.impl.dummy.DummySnapshot;
+import it.unibz.inf.pp.clash.model.snapshot.impl.TestSnapshot;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor;
 import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
@@ -14,13 +14,11 @@ import java.util.Optional;
 import java.util.Random;
 
 import static it.unibz.inf.pp.clash.model.snapshot.Snapshot.Player.FIRST;
-import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.ONE;
-import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.THREE;
 
 public class TestEventHandler implements EventHandler {
 
         private final DisplayManager DM;
-        private DummySnapshot currentSnap;
+        private TestSnapshot currentSnap;
 
         private boolean isP1 = true;            // current player
 
@@ -47,7 +45,7 @@ public class TestEventHandler implements EventHandler {
     public void newGame(String firstHero, String secondHero) {
 
         // TODO: change snapshot depending on difficulty (or level)
-        this.currentSnap = new DummySnapshot(firstHero, secondHero);    // create snapshot
+        this.currentSnap = new TestSnapshot(firstHero, secondHero);    // create snapshot
         this.updateGameUI("Welcome to the game!");                                         // update UI
     }
 
@@ -450,11 +448,11 @@ public class TestEventHandler implements EventHandler {
      * @return the random optional(unit)
      */
     public Optional<Unit> randomReinforcement(){
-        Fairy fairy = new Fairy(UnitColor.ONE);
-        Unicorn unicorn = new Unicorn(UnitColor.THREE);
-        Butterfly butterfly = new Butterfly(UnitColor.TWO);
+        Wolfie wolf = new Wolfie();
+        Hare rabbit = new Hare();
+        Tigre tiger = new Tigre();
 
-        Unit[] unitArray = {fairy, unicorn, butterfly};
+        Unit[] unitArray = {wolf, rabbit, tiger};
         int rndmIndex = new Random().nextInt(unitArray.length);
 
         return Optional.of(unitArray[rndmIndex]);

@@ -8,7 +8,7 @@ import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
 import java.util.Optional;
 
 /**
- * Dummy class, for learning/reverse engineering the Board interface and its implementation
+ * Currently main Board class, for learning/reverse engineering the Board interface and its implementation
  */
 public class TestBoardImpl implements Board {
 

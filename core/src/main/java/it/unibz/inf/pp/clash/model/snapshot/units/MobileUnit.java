@@ -5,7 +5,7 @@ package it.unibz.inf.pp.clash.model.snapshot.units;
  */
 public interface MobileUnit extends Unit {
 
-    enum UnitColor {ONE, TWO, THREE}
+    enum UnitColor {ONE, TWO, THREE, ZERO}
 
     /**
      * @return the unit's color (two units of the same type may have different colors)

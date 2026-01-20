@@ -12,7 +12,7 @@ public class Wolfie implements MobileUnit {
 
     public Wolfie(){
         this.health = 3;
-        this.color = UnitColor.TWO;
+        this.color = UnitColor.ZERO;
         this.attackCountdown = 0;
         this.attackDamage = 2;
     }
