@@ -62,6 +62,24 @@ public abstract class AbstractSnapshot implements Snapshot {
         this.activeplayer = player;
     }
 
+    public Player getOpponentPlayer(boolean isP1){
+        if (isP1) {return Player.SECOND;}
+        else return Player.FIRST;
+    }
+
+    public Hero getOpponentHero(Player player) {
+        return switch (player) {
+            case FIRST -> secondHero;
+            case SECOND -> firstHero;
+        };
+    }
+
+    public void setNumberOfRemainingActions(int newRemainingActions) {
+        this.actionsRemaining = newRemainingActions;
+    }
+
+
+
     public void setOngoingMove(int rowIndex, int columnIndex){
         this.ongoingMove = new TileCoordinates(rowIndex, columnIndex);
     }

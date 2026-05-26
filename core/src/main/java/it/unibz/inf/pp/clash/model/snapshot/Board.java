@@ -2,8 +2,11 @@ package it.unibz.inf.pp.clash.model.snapshot;
 
 import it.unibz.inf.pp.clash.model.exceptions.CoordinatesOutOfBoardException;
 import it.unibz.inf.pp.clash.model.exceptions.OccupiedTileException;
+import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
+import it.unibz.inf.pp.clash.model.snapshot.units.impl.Wolfie;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -20,6 +23,13 @@ import java.util.Optional;
  * A same unit may stand on multiple (adjacent) tiles.
  */
 public interface Board {
+
+    void addUnitForPlayer(int rowIndex, int columnIndex, Unit unit, Snapshot.Player player);
+
+    void removeUnitForPlayer(int rowIndex, int columnIndex);
+
+    public ArrayList<MobileUnit> getArmyP1();
+    public ArrayList<MobileUnit> getArmyP2();
 
     /**
      * A pair of coordinates for a tile.

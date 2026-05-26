@@ -6,8 +6,10 @@ import it.unibz.inf.pp.clash.model.EventHandler;
 import it.unibz.inf.pp.clash.model.snapshot.Snapshot;
 import it.unibz.inf.pp.clash.view.DisplayManager;
 import it.unibz.inf.pp.clash.view.exceptions.NoGameOnScreenException;
+import it.unibz.inf.pp.clash.view.screen.endGame.EndGameScreen;
 import it.unibz.inf.pp.clash.view.screen.game.GameScreen;
 import it.unibz.inf.pp.clash.view.screen.home.HomeScreen;
+import it.unibz.inf.pp.clash.view.screen.sync.AnimationCounter;
 import it.unibz.inf.pp.clash.view.singletons.FileManager;
 import it.unibz.inf.pp.clash.view.singletons.FontManager;
 import it.unibz.inf.pp.clash.view.singletons.ImageManager;
@@ -23,6 +25,8 @@ public class DisplayManagerImpl extends Game implements DisplayManager {
     private EventHandler eventHandler;
     private HomeScreen homeScreen;
     private GameScreen gameScreen;
+
+    private EndGameScreen endGameScreen;
 
 
     /**
@@ -91,5 +95,30 @@ public class DisplayManagerImpl extends Game implements DisplayManager {
 
         setScreen(homeScreen);
         homeScreen.render(Gdx.graphics.getDeltaTime());
+    }
+
+    /**
+     * Testing end game
+     * Currently, newSnap is the same as the PreviousSnap
+     */
+    @Override
+    public void drawEndGameScreen(Snapshot previousSnapshot, Snapshot newSnapshot,
+                                  String victoryMessage){
+
+        AnimationCounter animationCounter = new AnimationCounter(this.animationDuration); //RH from GameScreen
+
+        if(endGameScreen == null) {
+            endGameScreen = new EndGameScreen(eventHandler, animationCounter, debug,
+                    previousSnapshot, newSnapshot,
+                    victoryMessage);
+        }
+
+        if(gameScreen != null) {
+            gameScreen.dispose();
+            gameScreen = null;
+        }
+
+        setScreen(endGameScreen);
+        endGameScreen.render(Gdx.graphics.getDeltaTime());
     }
 }

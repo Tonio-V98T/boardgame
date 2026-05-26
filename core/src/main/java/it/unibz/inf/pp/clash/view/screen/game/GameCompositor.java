@@ -71,10 +71,11 @@ public class GameCompositor extends Compositor {
 
         mainTable.add();
 
-        mainTable.add(drawBoardSeparation())
-                .height(dimensions.getPlayerSeparatorHeight())
-                .expand()
-                .fill();
+        // removed for free movement
+//        mainTable.add(drawBoardSeparation())
+//                .height(dimensions.getPlayerSeparatorHeight())
+//                .expand()
+//                .fill();
 
         mainTable.add();
 

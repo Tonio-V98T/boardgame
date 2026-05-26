@@ -8,4 +8,8 @@ public class Butterfly extends AbstractMobileUnit implements MobileUnit {
         super(5, color);
     }
 
+    @Override
+    public int getMaxTileMovement() {
+        return 0;
+    }
 }

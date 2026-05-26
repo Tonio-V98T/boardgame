@@ -11,11 +11,22 @@ import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
         private int attackCountdown;
         int attackDamage;
 
+        int maxTileMovement;
+
         public Hare() {
             this.health = 2;
             this.colour = UnitColor.ZERO;
-            this.attackCountdown = 0;
-            this.attackDamage = 3;
+            this.attackCountdown = 1;
+            this.attackDamage = 1;
+            this.maxTileMovement = 3;
+        }
+
+        public Hare(UnitColor color) {
+            this.health = 2;
+            this.colour = color;
+            this.attackCountdown = 1;
+            this.attackDamage = 1;
+            this.maxTileMovement = 3;
         }
 
         @Override
@@ -46,7 +57,10 @@ import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
             this.health = health;
         }
 
-
+        @Override
+        public int getMaxTileMovement() {
+            return this.maxTileMovement;
+        }
     }
 
 
