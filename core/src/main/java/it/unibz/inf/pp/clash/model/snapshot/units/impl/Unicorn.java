@@ -9,4 +9,8 @@ public class Unicorn extends AbstractMobileUnit implements MobileUnit {
     }
 
 
+    @Override
+    public int getMaxTileMovement() {
+        return 0;
+    }
 }

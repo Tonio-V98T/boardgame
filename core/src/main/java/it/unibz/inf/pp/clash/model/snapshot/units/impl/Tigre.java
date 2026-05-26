@@ -10,11 +10,22 @@ public class Tigre implements MobileUnit {
     int attackCountdown;
     int attackDamage;
 
+    int maxTileMovement;
+
     public Tigre (){
         this.health = 4;
         this.color = UnitColor.ZERO;
-        this.attackCountdown = 4;
+        this.attackCountdown = 3;
         this.attackDamage = 3;
+        this.maxTileMovement = 1;
+    }
+
+    public Tigre (UnitColor color){
+        this.health = 4;
+        this.color = color;
+        this.attackCountdown = 3;
+        this.attackDamage = 3;
+        this.maxTileMovement = 1;
     }
 
     @Override
@@ -43,5 +54,10 @@ public class Tigre implements MobileUnit {
     @Override
     public void setHealth(int health) {
         this.health = health;
+    }
+
+    @Override
+    public int getMaxTileMovement() {
+        return this.maxTileMovement;
     }
 }

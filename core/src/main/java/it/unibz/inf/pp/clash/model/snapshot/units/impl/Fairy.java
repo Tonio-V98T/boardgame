@@ -7,4 +7,9 @@ public class Fairy extends AbstractMobileUnit implements MobileUnit {
     public Fairy(UnitColor color) {
         super(2,  color);
     }
+
+    @Override
+    public int getMaxTileMovement() {
+        return 0;
+    }
 }

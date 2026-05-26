@@ -10,17 +10,21 @@ public class Wolfie implements MobileUnit {
     int attackCountdown;
     int attackDamage;
 
+    int maxTileMovement;
+
     public Wolfie(){
         this.health = 3;
         this.color = UnitColor.ZERO;
-        this.attackCountdown = 0;
+        this.attackCountdown = 2;
         this.attackDamage = 2;
+        this.maxTileMovement = 2;
     }
     public Wolfie(UnitColor color){
         this.health = 3;
         this.color = color;
-        this.attackCountdown = 0;
+        this.attackCountdown = 2;
         this.attackDamage = 2;
+        this.maxTileMovement = 2;
     }
 
     @Override
@@ -49,5 +53,10 @@ public class Wolfie implements MobileUnit {
     @Override
     public void setHealth(int health) {
         this.health = health;
+    }
+
+    @Override
+    public int getMaxTileMovement() {
+        return this.maxTileMovement;
     }
 }

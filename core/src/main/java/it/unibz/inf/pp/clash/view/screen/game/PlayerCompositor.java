@@ -171,12 +171,12 @@ public class PlayerCompositor extends Compositor {
             );
         }
 
-        playerTable.add(
-                createLabel(
-                        reinforcement,
-                        GuiColor.REINFORCEMENT,
-                        animation
-                ));
+//        playerTable.add(
+//                createLabel(
+//                        reinforcement,
+//                        GuiColor.REINFORCEMENT,
+//                        animation
+//                ));
 
         playerTable.row();
     }
@@ -291,5 +291,61 @@ public class PlayerCompositor extends Compositor {
         }
         return label;
     }
+
+    /**
+     * Following is a fallback method, which is called only by the endGameScreenCompositor.
+     * The players are drawn again, but without any interactable buttons.
+     */
+
+    public Table drawPlayerEndGame(Snapshot previousSnapshot, Snapshot newSnapshot, Player player) {
+
+        Table playerTable = new Table();
+        playerTable.setDebug(debug);
+
+        Hero previousHero = previousSnapshot != null? previousSnapshot.getHero(player):null;
+        Hero newHero = newSnapshot.getHero(player);
+
+        boolean firstPlayerActive = newSnapshot.getActivePlayer() == FIRST;
+
+        switch (player) {
+            case FIRST -> {
+                //addReinforcementButton(previousSnapshot, newSnapshot, player, playerTable, firstPlayerActive);
+                addSmallVerticalSpace(playerTable);                // was large
+                //addSkipTurnButton(playerTable, firstPlayerActive);
+                //addSmallHorizontalSpace(playerTable);               // TEST
+                //addMovementButton(playerTable, firstPlayerActive);  // TEST
+                //addAttackButton(playerTable, firstPlayerActive);
+                addMediumVerticalSpace(playerTable);                // was large
+                addCountdown(previousSnapshot, newSnapshot, playerTable, firstPlayerActive);
+                addSmallVerticalSpace(playerTable);
+                addHealth(previousHero, newHero, playerTable);
+                addSmallVerticalSpace(playerTable);
+                addPortrait(newHero, playerTable);
+                addSmallVerticalSpace(playerTable);
+                addName(newHero, playerTable);
+                addMediumVerticalSpace(playerTable);
+            }
+            case SECOND -> {
+                addMediumVerticalSpace(playerTable);
+                addName(newHero, playerTable);
+                addSmallVerticalSpace(playerTable);
+                addPortrait(newHero, playerTable);
+                addSmallVerticalSpace(playerTable);
+                addHealth(previousHero, newHero, playerTable);
+                addSmallVerticalSpace(playerTable);
+                addCountdown(previousSnapshot, newSnapshot, playerTable, !firstPlayerActive);
+                addMediumVerticalSpace(playerTable);                // was large
+                //addSkipTurnButton(playerTable, !firstPlayerActive);
+                //addMovementButton(playerTable, !firstPlayerActive);
+                //addAttackButton(playerTable, !firstPlayerActive);
+                //addMediumVerticalSpace(playerTable); // currently too large with vertical spaces. why?
+                addSmallVerticalSpace(playerTable);                 // was large
+                //addReinforcementButton(previousSnapshot, newSnapshot, player, playerTable, !firstPlayerActive);
+            }
+        }
+        return playerTable;
+    }
+
+
 }
 

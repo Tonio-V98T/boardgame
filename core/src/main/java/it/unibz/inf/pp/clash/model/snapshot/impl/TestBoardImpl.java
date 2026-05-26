@@ -3,8 +3,11 @@ package it.unibz.inf.pp.clash.model.snapshot.impl;
 import it.unibz.inf.pp.clash.model.exceptions.CoordinatesOutOfBoardException;
 import it.unibz.inf.pp.clash.model.exceptions.OccupiedTileException;
 import it.unibz.inf.pp.clash.model.snapshot.Board;
+import it.unibz.inf.pp.clash.model.snapshot.Snapshot;
+import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -13,6 +16,10 @@ import java.util.Optional;
 public class TestBoardImpl implements Board {
 
     final Unit[][] grid;
+
+    // armies for player 1 and 2
+    private ArrayList<MobileUnit> armyP1 = new ArrayList<>();
+    private ArrayList<MobileUnit> armyP2 = new ArrayList<>();
 
     /**
      * Constructor, as implemented in the dummy snapshot
@@ -103,6 +110,14 @@ public class TestBoardImpl implements Board {
         return Optional.ofNullable(grid[rowIndex][columnIndex]);
     }
 
+    public ArrayList<MobileUnit> getArmyP1() {
+        return armyP1;
+    }
+
+    public ArrayList<MobileUnit> getArmyP2() {
+        return armyP2;
+    }
+
     @Override
     public void addUnit(int rowIndex, int columnIndex, Unit unit)
                         throws OccupiedTileException, CoordinatesOutOfBoardException {
@@ -119,6 +134,25 @@ public class TestBoardImpl implements Board {
     }
 
     @Override
+    public void addUnitForPlayer(int rowIndex, int columnIndex, Unit unit, Snapshot.Player player)
+            throws OccupiedTileException, CoordinatesOutOfBoardException {
+        checkBoundaries(rowIndex, columnIndex);
+        // update board
+        if (grid[rowIndex][columnIndex] != null) {
+            throw new OccupiedTileException(grid[rowIndex][columnIndex]);
+        }
+        grid[rowIndex][columnIndex] = unit;
+
+        if (unit instanceof MobileUnit mobile) {
+            // update player army
+            switch (player) {
+                case FIRST -> armyP1.add(mobile);
+                case SECOND -> armyP2.add(mobile);
+            }
+        }
+    }
+
+    @Override
     public void removeUnit  (int rowIndex, int columnIndex)
                             throws CoordinatesOutOfBoardException {
         // check if tile selected is within board dimensions
@@ -127,5 +161,19 @@ public class TestBoardImpl implements Board {
         // remove unit
         this.grid[rowIndex][columnIndex] = null;
 
+    }
+
+    public void removeUnitForPlayer(int rowIndex, int columnIndex)
+            throws CoordinatesOutOfBoardException {
+        // check boundaries
+        checkBoundaries(rowIndex, columnIndex);
+
+        // update player army
+        if (armyP1.contains(getUnit(rowIndex, columnIndex).get())){
+            armyP1.remove(getUnit(rowIndex, columnIndex).get());
+        } else {armyP2.remove(getUnit(rowIndex, columnIndex).get());}
+
+        // update board
+        grid[rowIndex][columnIndex] = null;
     }
 }

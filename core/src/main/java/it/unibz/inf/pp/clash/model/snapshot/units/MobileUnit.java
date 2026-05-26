@@ -27,4 +27,6 @@ public interface MobileUnit extends Unit {
      * @return The damage that the unit can inflict to an enemy unit or player
      */
     int getAttackDamage();
+
+    int getMaxTileMovement();
 }

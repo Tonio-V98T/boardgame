@@ -6,6 +6,7 @@ import it.unibz.inf.pp.clash.model.snapshot.impl.TestBoardImpl;
 import it.unibz.inf.pp.clash.model.snapshot.impl.HeroImpl;
 
 
+import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.impl.Hare;
 import it.unibz.inf.pp.clash.model.snapshot.units.impl.Tigre;
 import it.unibz.inf.pp.clash.model.snapshot.units.impl.Wolfie;
@@ -16,8 +17,8 @@ public class TestSnapshot extends AbstractSnapshot implements Snapshot {
 
     public TestSnapshot(String firstHeroName, String secondHeroName) {
         super(
-                new HeroImpl(firstHeroName, 20),
-                new HeroImpl(secondHeroName, 20),
+                new HeroImpl(firstHeroName, 1),
+                new HeroImpl(secondHeroName, 1),
                 TestBoardImpl.createEmptyBoard(11, 7),
                 Player.FIRST,
                 3,
@@ -30,30 +31,23 @@ public class TestSnapshot extends AbstractSnapshot implements Snapshot {
 
     private void populateTiles() {
 
-        Wolfie wolf = new Wolfie();
-        Hare rabbit = new Hare();
-        Tigre tiger = new Tigre();
+        //Player 1 & 2 always begin with the same units
 
-        //Player 2
+        // Player 2 (Color Three/Red)
+        board.addUnitForPlayer(5, 4, new Wolfie(THREE), Player.SECOND);
+        board.addUnitForPlayer(5, 3, new Hare(THREE), Player.SECOND);
+        board.addUnitForPlayer(5, 5, new Tigre(THREE), Player.SECOND);
 
-        board.addUnit(5, 4, wolf);
-        board.addUnit(5, 3, rabbit);
-        board.addUnit(5, 5, tiger);
+        //Player 1 (Color Zero/White)
 
-        //Player 1
-
-        board.addUnit(6, 4, wolf);
-        board.addUnit(6, 3, rabbit);
-        board.addUnit(6, 5, tiger);
+        board.addUnitForPlayer(6, 4, new Wolfie(ZERO), Player.FIRST);
+        board.addUnitForPlayer(6, 3, new Hare(ZERO), Player.FIRST);
+        board.addUnitForPlayer(6, 5, new Tigre(ZERO), Player.FIRST);
 
     }
 
     @Override
     public int getSizeOfReinforcement(Player player) {
-
-        if (player == Player.FIRST) {
-            return 3;
-        }
-        return 3;
+        return this.getNumberOfRemainingActions();   // fixed for both players, to make the game fair
     }
 }

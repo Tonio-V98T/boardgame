@@ -35,6 +35,11 @@ public class Chef implements MobileUnit {
     public int getAttackDamage(){return this.attackDamage;}
 
     @Override
+    public int getMaxTileMovement() {
+        return 0;
+    }
+
+    @Override
     public int getHealth() {
         return this.health;
     }

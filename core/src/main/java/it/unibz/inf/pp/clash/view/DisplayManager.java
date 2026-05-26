@@ -37,4 +37,11 @@ public interface DisplayManager {
 
     void setEventHandler(EventHandler eventHandler);
 
+    /**
+     * Testing End game screen
+     */
+
+    void drawEndGameScreen(Snapshot previousSnapshot, Snapshot newSnapshot,
+                           String victoryMessage);
+
 }

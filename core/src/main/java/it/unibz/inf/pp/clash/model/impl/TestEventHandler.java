@@ -1,6 +1,7 @@
 package it.unibz.inf.pp.clash.model.impl;
 
 import it.unibz.inf.pp.clash.model.EventHandler;
+import it.unibz.inf.pp.clash.model.snapshot.Hero;
 import it.unibz.inf.pp.clash.model.snapshot.Snapshot;
 import it.unibz.inf.pp.clash.model.snapshot.impl.TestSnapshot;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
@@ -10,10 +11,13 @@ import it.unibz.inf.pp.clash.model.snapshot.units.impl.*;
 import it.unibz.inf.pp.clash.view.DisplayManager;
 import it.unibz.inf.pp.clash.view.exceptions.NoGameOnScreenException;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Random;
 
 import static it.unibz.inf.pp.clash.model.snapshot.Snapshot.Player.FIRST;
+import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.THREE;
+import static it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit.UnitColor.ZERO;
 
 public class TestEventHandler implements EventHandler {
 
@@ -51,7 +55,7 @@ public class TestEventHandler implements EventHandler {
 
     @Override
     public void exitGame() {
-        // ??? implementing goodbye msg?
+        // implementing goodbye -> not at the moment
         this.DM.drawHomeScreen();
     }
 
@@ -61,14 +65,42 @@ public class TestEventHandler implements EventHandler {
 
     @Override
     public void skipTurn() {
-        // invert turns
+
+        // invert turns, and continue game
         this.invertTurns();
 
-        if (this.isP1){this.currentSnap.setActivePlayer(FIRST);}
-        else {this.currentSnap.setActivePlayer(Snapshot.Player.SECOND);}
 
-        // reset last selected cell
+        // BEGIN: Atk Countdown
+        if (this.isP1){
+            this.currentSnap.setActivePlayer(FIRST);
+            // decrease atk countdown
+            for (MobileUnit mobile : this.currentSnap.getBoard().getArmyP1()){
+                if(mobile.getAttackCountdown() > 0) {
+                    mobile.setAttackCountdown(mobile.getAttackCountdown() - 1);
+                }
+            }
+        }
+        else {
+            this.currentSnap.setActivePlayer(Snapshot.Player.SECOND);
+
+            // decrease atk countdown
+            for (MobileUnit mobile : this.currentSnap.getBoard().getArmyP2()){
+                if(mobile.getAttackCountdown() > 0) {
+                    mobile.setAttackCountdown(mobile.getAttackCountdown() - 1);
+                }
+            }
+        }
+        // END: Atk Countdown
+
+        // reset remaining actions for player (remember: it's a global variable)
+        this.currentSnap.setNumberOfRemainingActions(3);
+
+        // reset last selected cell / moving unit / attacking unit
         this.selectedUnit = Optional.empty();
+        this.isMoveSelected = false;
+        this.movingUnit = Optional.empty();
+        this.isAttackSelected = false;
+        this.attackingUnit = Optional.empty();
 
         // messages
         String player = "";
@@ -95,17 +127,22 @@ public class TestEventHandler implements EventHandler {
         // retrieve tile(unit) and its info
         Optional<Unit> chosenUnit = this.getUnitAsOptional(rowIndex, columnIndex);
 
+            // removed for implementing free movement
             // PLAYER check: only select units/tiles on their side of the board
-            if (!this.areValidPlayerCoordinates(rowIndex)){
-                this.updateGameMsg("Select a valid tile (on your board side)");
-                return;
-            }
+//            if (!this.areValidPlayerCoordinates(rowIndex)){
+//                this.updateGameMsg("Select a valid tile (on your board side)");
+//                return;
+//            }
 
             // MOVEMENT check: if selection (LX click) is the destination of a unit movement
             if (this.isMoveSelected &&
                     this.movingUnit.isPresent() &&
                     chosenUnit.isEmpty()){
-                this.moveUnit(rowIndex, columnIndex);
+                if (this.isValidMovement(rowIndex, columnIndex)) {
+                    this.moveUnit(rowIndex, columnIndex);
+                } else {
+                    this.updateGameMsg("Selected tile exceeds this unit's walking distance");
+                }
                 return;
             }
 
@@ -113,10 +150,20 @@ public class TestEventHandler implements EventHandler {
             if (this.isAttackSelected &&
                     this.attackingUnit.isPresent() &&
                     chosenUnit.isPresent()){
-                this.attackUnit(rowIndex, columnIndex, chosenUnit);
+                if(this.isValidAttack(rowIndex, columnIndex)){
+                    this.attackUnit(rowIndex, columnIndex, chosenUnit);
+                } else {
+                    this.updateGameMsg("Defending unit exceeds this unit's attack range");
+                }
                 return;
             }
-        
+
+        // if opponent's unit, do not store as selection
+//        if (this.isP1 && this.currentSnap.getBoard().getArmyP2().contains(chosenUnit.get())){
+//            this.updateGameMsg("Cannot select an opponent's unit");
+//            return;
+//        }
+
         // store unit and its coordinates (for reinforcements and movement)
         this.setSelectedUnitInfo(rowIndex, columnIndex, chosenUnit);
 
@@ -130,10 +177,7 @@ public class TestEventHandler implements EventHandler {
             this.isMoveSelected = false;
         }
 
-        // UI (LX click, no attack)
-
-
-        // UI (DEFAULT)
+        // UI (LX click, no attack & no movement)
         else {msg = "Selected " + this.unitInfo(chosenUnit);}
         this.updateGameMsg(msg);            // UI (left click)
     }
@@ -143,9 +187,38 @@ public class TestEventHandler implements EventHandler {
     public void callReinforcement() {
         String msg = "";
 
+            // ACTIONS check: return if zero actions left
+            if (this.currentSnap.getNumberOfRemainingActions() <= 0){
+                this.updateGameMsg("No actions left for this turn");
+                return;
+            }
+
+            // removed for free movement
             // PLAYER check: only select units/tiles on their side of the board
-            if (!this.areValidPlayerCoordinates(this.selectedRowIndex)){
-                this.updateGameMsg("Select a valid tile (on your board side)");
+//            if (!this.areValidPlayerCoordinates(this.selectedRowIndex)){
+//                this.updateGameMsg("Select a valid tile (on your board side)");
+//                return;
+//            }
+
+            // if atk button was selected -> cancel attack (but proceed with movement)
+            if (this.isAttackSelected){
+                this.isAttackSelected = false;
+                this.attackingUnit = Optional.empty();
+                //this.attackingRowIndex
+
+                this.updateGameMsg("Attack cancelled; " +
+                        "if you want to add reinforcements, press this button again");
+                return;
+            }
+
+            // if movement button was selected -> cancel movement (but proceed with atk)
+            if (this.isMoveSelected){
+                this.isMoveSelected = false;
+                this.movingUnit = Optional.empty();
+                //this.attackingRowIndex
+
+                this.updateGameMsg("Movement cancelled; " +
+                        "if you want to add reinforcements, press this button again");
                 return;
             }
 
@@ -155,13 +228,24 @@ public class TestEventHandler implements EventHandler {
                 return;
             }
 
+            // if not at end of own board side, or close to allied units: abort
+            if (!this.isValidReinforcement(this.selectedRowIndex, this.selectedColumnIndex)){
+                this.updateGameMsg("Reinforcement unit must be positioned at " +
+                        "the end of your board side, or close to an ally");            // UI
+                return;
+            }
+
         // else empty cell: add random reinforcement unit and select it
         this.selectedUnit = this.randomReinforcement();
 
-        this.currentSnap.getBoard().addUnit(this.selectedRowIndex,
+        this.currentSnap.getBoard().addUnitForPlayer(this.selectedRowIndex,
                                             this.selectedColumnIndex,
-                                            this.selectedUnit.get());
+                                            this.selectedUnit.get(),
+                                            this.currentSnap.getActivePlayer());
         //this.selectedUnit = Optional.of(tmpUnit);   // update as last selected cell
+
+        // decrease player actions by 1
+        this.currentSnap.setNumberOfRemainingActions(this.currentSnap.getNumberOfRemainingActions() - 1);
 
         // UI
         msg =   "Added " + this.unitInfo(this.selectedUnit) +
@@ -175,11 +259,12 @@ public class TestEventHandler implements EventHandler {
     public void deleteUnit(int rowIndex, int columnIndex) {
         Optional<Unit> chosenUnit = this.getUnitAsOptional(rowIndex, columnIndex);
 
+            // removed for free movement
             // 1) player check: only select units/tiles on their side of the board
-            if (!this.areValidPlayerCoordinates(rowIndex)){
-                this.updateGameMsg("Tile not valid for deletion (not on your board side)");
-                return;
-            }
+//            if (!this.areValidPlayerCoordinates(rowIndex)){
+//                this.updateGameMsg("Tile not valid for deletion (not on your board side)");
+//                return;
+//            }
             // 2) if empty tile
             if (chosenUnit.isEmpty()){
                 this.updateGameMsg("No unit to be removed");
@@ -187,7 +272,7 @@ public class TestEventHandler implements EventHandler {
             }
 
         // else: unit is present on tile
-        this.currentSnap.getBoard().removeUnit(rowIndex, columnIndex);
+        this.currentSnap.getBoard().removeUnitForPlayer(rowIndex, columnIndex);
         // empty tile if it was also the last selected cell or moving unit
         if (chosenUnit.equals(this.selectedUnit)){this.selectedUnit = Optional.empty();}
         if (chosenUnit.equals(this.movingUnit)){this.movingUnit = Optional.empty();}
@@ -198,6 +283,13 @@ public class TestEventHandler implements EventHandler {
 
     @Override
     public void movementSwitch() {
+
+        // ACTIONS check: return if zero actions left
+        if (this.currentSnap.getNumberOfRemainingActions() <= 0){
+            this.updateGameMsg("No actions left for this turn");
+            return;
+        }
+
         // if movement button was already selected -> cancel action
         if (this.isMoveSelected){
             this.isMoveSelected = false;
@@ -205,10 +297,29 @@ public class TestEventHandler implements EventHandler {
             return;
         }
 
+        // if atk button was selected -> cancel attack (but proceed with movement)
+        if (this.isAttackSelected){
+            this.isAttackSelected = false;
+            this.attackingUnit = Optional.empty();
+            //this.attackingRowIndex
+
+            this.updateGameMsg("Attack cancelled; " +
+                    "if you want to proceed with movement, press this button again");
+            return;
+        }
+
         // if no unit is selected -> exit
         if (this.selectedUnit.isEmpty() ||
                 this.selectedUnit.get() instanceof ZeroVoid) {
             this.updateGameMsg("No unit to be moved");
+            return;
+        }
+
+        // if unit is not in current player's army -> exit
+        // in this case, the game is simple, so no casting for selectedUnit is necessary
+        if ((this.isP1 && this.currentSnap.getBoard().getArmyP2().contains(this.selectedUnit.get())) ||
+           ((!this.isP1) && this.currentSnap.getBoard().getArmyP1().contains(this.selectedUnit.get()))){
+            this.updateGameMsg("Cannot move an opponent's unit");
             return;
         }
 
@@ -222,6 +333,12 @@ public class TestEventHandler implements EventHandler {
         // suppose to use a button, as with movement
         // thus, starting point is the selected unit
 
+        // ACTIONS check: return if zero actions left
+        if (this.currentSnap.getNumberOfRemainingActions() <= 0){
+            this.updateGameMsg("No actions left for this turn");
+            return;
+        }
+
         // if switch already true -> turn off attack
         if (this.isAttackSelected){
             this.isAttackSelected = false;
@@ -229,9 +346,28 @@ public class TestEventHandler implements EventHandler {
             return;
         }
 
+        // if movement button was selected -> cancel movement (but proceed with atk)
+        if (this.isMoveSelected){
+            this.isMoveSelected = false;
+            this.movingUnit = Optional.empty();
+            //this.attackingRowIndex
+
+            this.updateGameMsg("Movement cancelled; " +
+                    "if you want to attack, press this button again");
+            return;
+        }
+
         // EMPTY tile check -> exit
         if (this.selectedUnit.isEmpty()){
             this.updateGameMsg("Select a unit before declaring the attack");
+            return;
+        }
+
+        // if unit is not in current player's army -> exit
+        // in this case, the game is simple, so no casting for selectedUnit is necessary
+        if ((this.isP1 && this.currentSnap.getBoard().getArmyP2().contains(this.selectedUnit.get())) ||
+           ((!this.isP1) && this.currentSnap.getBoard().getArmyP1().contains(this.selectedUnit.get()))){
+            this.updateGameMsg("Cannot attack with an opponent's unit");
             return;
         }
 
@@ -260,23 +396,63 @@ public class TestEventHandler implements EventHandler {
 
     public void attackUnit(int rowIndex, int columnIndex, Optional<Unit> chosenUnit){
 
-        // TODO: should only target the oppo's units
-
-        // even allowing for infighting, it should still not attack itself
-        //if (this.attackingUnit.equals(this.selectedUnit)){
-            // exit
-        //}
-
+        // should only target the oppo's units
+        // if unit is not in opponent's army -> exit
+        // in this case, the game is simple, so no casting for selectedUnit is necessary
+        if ((this.isP1 && this.currentSnap.getBoard().getArmyP1().contains(chosenUnit.get())) ||
+                ((!this.isP1) && this.currentSnap.getBoard().getArmyP2().contains(chosenUnit.get()))){
+            this.updateGameMsg("Cannot attack your own unit");
+            return;
+        }
 
         // deal damage to unit (health - damage)
-        int defendingUnitHealth = chosenUnit.get().getHealth();
-
-        chosenUnit.get().setHealth(defendingUnitHealth - this.attackerDamage);
-
-        // subtract 1 HP from opposing player
+        chosenUnit.get().setHealth(chosenUnit.get().getHealth() - this.attackerDamage);
 
         // reset attackCountdown for the attacking unit
         this.attackingUnit.get().setAttackCountdown(3);
+
+        // decrease player actions by 1
+        this.currentSnap.setNumberOfRemainingActions(this.currentSnap.getNumberOfRemainingActions() - 1);
+
+        // if unit's health is zero or less -> delete
+        // and subtract 1 HP from opposing player
+        // (remember: because the attack takes priority, the target was not set as selectedUnit)
+        if (chosenUnit.get().getHealth() <= 0){
+            this.currentSnap.getBoard().removeUnitForPlayer(rowIndex, columnIndex);
+
+            Hero Opponent = this.currentSnap.getOpponentHero(this.currentSnap.getActivePlayer());
+            Opponent.setHealth(Opponent.getHealth() - 1);
+
+            // if oppo has zero life, current player wins
+            if (Opponent.getHealth() <= 0){
+
+                // show winning player name
+                String victoryMsg;
+                String victoryHeroName = this.currentSnap.getHero(this.currentSnap.getActivePlayer()).getName();
+                if (this.isP1){
+                    victoryMsg = "Player 1 " + victoryHeroName + " has won! Wow!";
+                } else {
+                    victoryMsg = "Player 2 " + victoryHeroName + " has won! Wow!";
+                }
+
+                // End Game UI
+                this.DM.drawEndGameScreen(this.currentSnap, this.currentSnap,
+                                victoryMsg);
+
+                // reset global variables (selected/attacking/etc), in case of new game
+                // reset attacking unit
+                this.isAttackSelected = false;
+                this.attackingUnit = Optional.empty();
+                // reset last selected cell
+                this.selectedUnit = Optional.empty();
+                // reset moving unit
+                this.isMoveSelected = false;
+                this.movingUnit = Optional.empty();
+
+                return;     // MANDATORY, breaks from the rendering loop (which would draw the snapshot again)
+            }
+
+        }
 
         // update UI
         String msg = this.unitInfo(Optional.of(this.attackingUnit.get())) +
@@ -285,15 +461,6 @@ public class TestEventHandler implements EventHandler {
                 this.unitInfo(chosenUnit) +
                 "\non cell (" + rowIndex + ", " + columnIndex + ")";
         this.updateGameUI(msg);
-
-        // if unit's health is zero or less -> delete
-        // remember: because the attack takes priority,
-        // the target was not set as selectedUnit
-        // TODO: why does it not disappear?
-        if (defendingUnitHealth <= 0){
-            //this.deleteUnit(rowIndex, columnIndex);
-            this.currentSnap.getBoard().removeUnit(rowIndex, columnIndex);
-        }
 
         // turn attack off and attacker to non-attacking state (set to empty)
         this.isAttackSelected = false;
@@ -398,19 +565,23 @@ public class TestEventHandler implements EventHandler {
      */
     public void moveUnit(int rowIndex, int columnIndex){
         // move unit to new tile
-        this.currentSnap.getBoard().addUnit(
+        this.currentSnap.getBoard().addUnitForPlayer(
                 rowIndex,
                 columnIndex,
-                this.movingUnit.get());
+                this.movingUnit.get(),
+                this.currentSnap.getActivePlayer());
 
         // delete unit from old tile
-        this.currentSnap.getBoard().removeUnit(this.movingRowIndex, this.movingColumnIndex);
+        this.currentSnap.getBoard().removeUnitForPlayer(this.movingRowIndex, this.movingColumnIndex);
 
         // switch movement off
         this.isMoveSelected = false;
 
         // store moved unit as the currently selected one
         this.setSelectedUnitInfo(rowIndex, columnIndex, this.movingUnit);
+
+        // decrease player actions by 1
+        this.currentSnap.setNumberOfRemainingActions(this.currentSnap.getNumberOfRemainingActions() - 1);
 
         // UI
         String msg = "Moved " + this.unitInfo(Optional.of(this.movingUnit.get())) +
@@ -441,6 +612,94 @@ public class TestEventHandler implements EventHandler {
         }
     }
 
+    public boolean isValidMovement(int rowIndex, int columnIndex){
+
+        int rowMovement = Math.abs(rowIndex - this.movingRowIndex);
+        int columnMovement = Math.abs(columnIndex -this.movingColumnIndex);
+        int diagonalMovement = rowMovement + columnMovement;
+
+        MobileUnit mobile = (MobileUnit) this.movingUnit.get();
+
+        if (diagonalMovement <= mobile.getMaxTileMovement()){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isValidAttack(int rowIndex, int columnIndex) {
+
+        boolean rowAttack = Math.abs(rowIndex - this.attackingRowIndex) <= 1;
+        boolean columnAttack = Math.abs(columnIndex -this.attackingColumnIndex) <= 1;
+
+        if (rowAttack && columnAttack) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isValidReinforcement(int rowIndex, int columnIndex){
+
+        // first possibility: reinforcement is placed at the end of player's board side
+
+        //boolean locationalValidity = false;
+        if (this.isP1 && (rowIndex == this.currentSnap.getBoard().getMaxRowIndex())) {
+            //locationalValidity = true;
+            return true;
+        } else if ((!this.isP1) && rowIndex == 0) {
+            //locationalValidity = true;
+            return true;
+        }
+
+        // second alternative: reinforcement is placed close to own unit
+        int[] validRows = {rowIndex, rowIndex + 1, rowIndex - 1};
+        int[] validColumns = {columnIndex, columnIndex + 1, columnIndex - 1};
+
+        int validRowsLength = 3;
+        int validColumnsLength = 3;
+
+        if (rowIndex == 0){
+            validRows = new int[]{rowIndex, rowIndex + 1};
+            validRowsLength = 2;
+        } else if (rowIndex == this.currentSnap.getBoard().getMaxRowIndex()) {
+            validRows = new int[]{rowIndex, rowIndex - 1};
+            validRowsLength = 2;
+        } //else {
+            //int[] validRows = {rowIndex, rowIndex + 1, rowIndex - 1};
+        //}
+
+        if (columnIndex == 0){
+            validColumns = new int[]{columnIndex, columnIndex + 1};
+            validColumnsLength = 2;
+        } else if (columnIndex == this.currentSnap.getBoard().getMaxColumnIndex()) {
+            validColumns = new int[]{columnIndex, columnIndex - 1};
+            validColumnsLength = 2;
+        } //else {
+            //int[] validColumns = {columnIndex, columnIndex + 1, columnIndex - 1};
+        //}
+
+        //boolean isAllyClose = false;
+
+        for (int i = 0; i < validRowsLength; i++){
+            for (int j = 0; j < validColumnsLength; j++){
+                Optional<Unit> currentTile = this.getUnitAsOptional(validRows[i], validColumns[j]);
+                if (currentTile.isPresent()){
+                    MobileUnit mobile = (MobileUnit) currentTile.get();
+                    if ((this.isP1 && this.currentSnap.getBoard().getArmyP1().contains(mobile)) ||
+                            ((!this.isP1) && this.currentSnap.getBoard().getArmyP2().contains(mobile))){
+                        //isAllyClose = true;
+                        //break;
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // if not at own side's end, or no proximity to allies
+        return false;
+    }
+
     /**
      * TMP
      * Creates a random optional(unit) out of three units.
@@ -448,9 +707,18 @@ public class TestEventHandler implements EventHandler {
      * @return the random optional(unit)
      */
     public Optional<Unit> randomReinforcement(){
-        Wolfie wolf = new Wolfie();
-        Hare rabbit = new Hare();
-        Tigre tiger = new Tigre();
+
+        UnitColor playerColor;
+
+        if (this.isP1){
+            playerColor = ZERO;
+        } else {
+            playerColor = THREE;
+        }
+
+        Wolfie wolf = new Wolfie(playerColor);
+        Hare rabbit = new Hare(playerColor);
+        Tigre tiger = new Tigre(playerColor);
 
         Unit[] unitArray = {wolf, rabbit, tiger};
         int rndmIndex = new Random().nextInt(unitArray.length);
