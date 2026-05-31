@@ -50,7 +50,7 @@ public class GameCompositor extends Compositor {
                         previousSnapshot,
                         newSnapshot,
                         SECOND
-                )).top();
+                ));//.top();
 
         mainTable.add(
                 boardCompositor.drawPlayerBoard(
@@ -85,7 +85,7 @@ public class GameCompositor extends Compositor {
                 playerCompositor.drawPlayer(
                         previousSnapshot,
                         newSnapshot, FIRST
-                )).bottom();
+                ));//.bottom();
 
         mainTable.add(
                 boardCompositor.drawPlayerBoard(
@@ -96,7 +96,7 @@ public class GameCompositor extends Compositor {
                 )).expandY().top();
 
         mainTable.add(drawExitButton())
-                .expandY().bottom();
+                .expandY();//.bottom();
 
         return messageLabel;
     }

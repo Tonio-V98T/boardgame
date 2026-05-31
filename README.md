@@ -1,11 +1,11 @@
 # ANIMA: Of chanting beasts
 
-Simple GUI game intended to be played one Vs. one, on a single board.
-Each player has a team composed of three unit types: wolf, hare, and tiger.
-Players can move their units along a grid; attack other units; and call for reinforcements.
+Simple GUI game to be played one Vs. one, on a single board.
 
-The game is still in development, and it can hardly be considered as finished.
-Nonetheless, working on this project taught me so much (not only on software development), that I still decided to submit this Beta.
+Each player has a team composed of three unit types: wolfie, hare, and tiger.
+Every time a unit is defeated, its owner loses 1HP.
+A player wins when the opponent reaches 0HP.
+During their turns, players can take one of three actions: move their units along a grid; attack other units; and call for reinforcements.
 
 ## (Updated) Requirements
 
@@ -88,16 +88,34 @@ This means that the code is partitioned into three components called
   It is not fancy, as it is implemented with an old imperative-like approach, rather than a declarative one.
 
 ## How to play
-The game is played in turns. During their own turn, a player can do one of the following actions:
+At the beginning of the game, both players start with three units each on the board.
+The goal is defeating the opponent by reducing its HP to 0.
+In order to achieve this, players must destroy enemy units, as killing one will reduce the opponent's HP by 1.
 
-- Move of their units to a destination tile (LX click + Move button);
-- Attack another unit (LX click + Attack button);
-- Remove one of their units (RX click).
+The game is played in turns. 
+During a turn, the current player can take up to three actions, which can be in any combination of the following:
 
-When a player is done, they can pass the turn with the Skip button.
+- Move an allied unit to a destination tile (LX click on allied unit to be moved + Move button + LX click on empty destination tile);
+- Attack another unit (LX click on allied attacker + Attack button + LX on enemy defender);
+- Call for a reinforcement unit (LX click on an empty tile, either at the end of active player's board side, or next to an allied unit).
 
-Currently, the game board is more of a playground for testing interactions.
-More rules would need to be implemented (decreasing attack countdown, attacking the opponent, etc...).
+Each unit has their own characteristics:
+- Hare (Health: 2; Moving distance: 3; Attack damage: 1);
+- Wolfie (Health: 3; Moving distance: 2; Attack damage: 2);
+- Tiger (Health: 4; Moving distance: 1; Attack damage: 3).
+
+As for the Movement action, only allied units can be moved, and the destination tile shall not exceed the unit's movement distance.
+Moreover, units can "walk through" other units, so long as they stop on an empty tile.
+To prevent fast travel, units cannot really walk diagonally, as this will be computed as the shortest path resulting from the combination of horizontal and vertical walks.
+
+Regarding the Attack, there is no infighting (i.e., treat well your friends).
+In order to attack, both the attacker and the defender must be on neighbouring (touching) tiles, including diagonal ones.
+The unit selected as attacker inflicts its damage to the defending unit's HP.
+A unit dies when its health drops to zero.
+
+Lastly, a random reinforcement unit can only be placed on an empty tile, which must be either at the end of active player's board side, or next to (touching, also diagonally) an allied unit.
+
+When a player is done, or they have no remaining actions available, they must pass the turn with the Skip button.
 
 
 ## Lessons on a more technical level
@@ -124,8 +142,4 @@ Three team members:
 - Antonio Piscitelli (Tonio-V98T) (APiscitelli). 
 Because of an early mistake (and a non-collaborating Git Bash), I pushed commits with both my GitHub account (Tonio-V98T),
 and a local account (APiscitelli). Implemented graphics (under view and assets), player input (new listeners),
-basic game logic (snapshot, board, event handler), and the desktop launcher. Cleaned some code along the way, and changed some other stuff (as reflected in the various commits and PRs). 
-
-This project is still in Beta, and will be submitted nonetheless.
-However, I wish this would have been a _team_ project, not a solo one...
-To this day, I am still not aware why the other members silently decided to abandon the project at its inception.
+game logic (snapshot, board, event handler), and the desktop launcher. Cleaned some code along the way, and changed some other stuff (as reflected in the various commits and PRs). 

@@ -6,12 +6,11 @@ import it.unibz.inf.pp.clash.model.snapshot.Board;
 import it.unibz.inf.pp.clash.model.snapshot.Snapshot;
 import it.unibz.inf.pp.clash.model.snapshot.units.MobileUnit;
 import it.unibz.inf.pp.clash.model.snapshot.units.Unit;
-
 import java.util.ArrayList;
 import java.util.Optional;
 
 /**
- * Currently main Board class, for learning/reverse engineering the Board interface and its implementation
+ * Currently main Board class
  */
 public class TestBoardImpl implements Board {
 
@@ -22,7 +21,7 @@ public class TestBoardImpl implements Board {
     private ArrayList<MobileUnit> armyP2 = new ArrayList<>();
 
     /**
-     * Constructor, as implemented in the dummy snapshot
+     * Constructor
      * @param grid array of arrays representing the board tiles
      */
     public TestBoardImpl(Unit[][] grid) {
@@ -30,8 +29,7 @@ public class TestBoardImpl implements Board {
     }
 
     /**
-     * Static method for creating a board,
-     * used in the dummy snapshot
+     * Static method for creating a board
      * @param maxRowIndex highest row-wise index
      * @param maxColumnIndex highest column-wise index
      * @return a new Board
@@ -110,13 +108,19 @@ public class TestBoardImpl implements Board {
         return Optional.ofNullable(grid[rowIndex][columnIndex]);
     }
 
-    public ArrayList<MobileUnit> getArmyP1() {
-        return armyP1;
+
+    /**
+     * Used to retrieve the active player's army
+     * @param isP1 whether active player is P1
+     * @return active player's army
+     */
+    public ArrayList<MobileUnit> getActivePlayerArmy(boolean isP1){
+        if (isP1){
+            return this.armyP1;
+        }
+        return this.armyP2;
     }
 
-    public ArrayList<MobileUnit> getArmyP2() {
-        return armyP2;
-    }
 
     @Override
     public void addUnit(int rowIndex, int columnIndex, Unit unit)
@@ -133,6 +137,15 @@ public class TestBoardImpl implements Board {
         this.grid[rowIndex][columnIndex] = unit;
     }
 
+    /**
+     * Adds a unit to the board, and to current player's army
+     * @param rowIndex y-axis of tile where the unit will be placed
+     * @param columnIndex x-axis of tile where the unit will be placed
+     * @param unit unit to be added
+     * @param player active player
+     * @throws OccupiedTileException
+     * @throws CoordinatesOutOfBoardException
+     */
     @Override
     public void addUnitForPlayer(int rowIndex, int columnIndex, Unit unit, Snapshot.Player player)
             throws OccupiedTileException, CoordinatesOutOfBoardException {
@@ -163,6 +176,12 @@ public class TestBoardImpl implements Board {
 
     }
 
+    /**
+     * Removes a unit from its owner's army, and from the board
+     * @param rowIndex
+     * @param columnIndex
+     * @throws CoordinatesOutOfBoardException
+     */
     public void removeUnitForPlayer(int rowIndex, int columnIndex)
             throws CoordinatesOutOfBoardException {
         // check boundaries
