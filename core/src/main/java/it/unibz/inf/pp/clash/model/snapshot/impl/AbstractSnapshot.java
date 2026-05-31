@@ -55,16 +55,12 @@ public abstract class AbstractSnapshot implements Snapshot {
         return actionsRemaining;
     }
 
-    /**
-     * Testing
-     */
-    public void setActivePlayer(Player player){
-        this.activeplayer = player;
+    public void setNumberOfRemainingActions(int newRemainingActions) {
+        this.actionsRemaining = newRemainingActions;
     }
 
-    public Player getOpponentPlayer(boolean isP1){
-        if (isP1) {return Player.SECOND;}
-        else return Player.FIRST;
+    public void setActivePlayer(Player player){
+        this.activeplayer = player;
     }
 
     public Hero getOpponentHero(Player player) {
@@ -74,11 +70,14 @@ public abstract class AbstractSnapshot implements Snapshot {
         };
     }
 
-    public void setNumberOfRemainingActions(int newRemainingActions) {
-        this.actionsRemaining = newRemainingActions;
+    /* ************************************
+                Deprecated
+       ************************************ */
+
+    public Player getOpponentPlayer(boolean isP1){
+        if (isP1) {return Player.SECOND;}
+        else return Player.FIRST;
     }
-
-
 
     public void setOngoingMove(int rowIndex, int columnIndex){
         this.ongoingMove = new TileCoordinates(rowIndex, columnIndex);

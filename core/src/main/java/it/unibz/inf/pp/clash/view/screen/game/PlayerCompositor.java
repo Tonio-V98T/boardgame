@@ -44,7 +44,7 @@ public class PlayerCompositor extends Compositor {
         switch (player) {
             case FIRST -> {
                 addReinforcementButton(previousSnapshot, newSnapshot, player, playerTable, firstPlayerActive);
-                addSmallVerticalSpace(playerTable);                // was large
+                //addSmallVerticalSpace(playerTable);                // was large
                 addSkipTurnButton(playerTable, firstPlayerActive);
                 // BEGIN TEST
                 //addSmallHorizontalSpace(playerTable);               // TEST
@@ -53,32 +53,35 @@ public class PlayerCompositor extends Compositor {
                 // END TEST
                 addMediumVerticalSpace(playerTable);                // was large
                 addCountdown(previousSnapshot, newSnapshot, playerTable, firstPlayerActive);
-                addSmallVerticalSpace(playerTable);
+                //addSmallVerticalSpace(playerTable);
                 addHealth(previousHero, newHero, playerTable);
                 addSmallVerticalSpace(playerTable);
                 addPortrait(newHero, playerTable);
-                addSmallVerticalSpace(playerTable);
+                //addSmallVerticalSpace(playerTable);
                 addName(newHero, playerTable);
-                addMediumVerticalSpace(playerTable);
+                //addMediumVerticalSpace(playerTable);
             }
             case SECOND -> {
-                addMediumVerticalSpace(playerTable);
+                //addMediumVerticalSpace(playerTable);
+                //addName(newHero, playerTable);
+                //addSmallVerticalSpace(playerTable);
+                addPortrait(newHero, playerTable);
                 addName(newHero, playerTable);
                 addSmallVerticalSpace(playerTable);
-                addPortrait(newHero, playerTable);
-                addSmallVerticalSpace(playerTable);
-                addHealth(previousHero, newHero, playerTable);
-                addSmallVerticalSpace(playerTable);
                 addCountdown(previousSnapshot, newSnapshot, playerTable, !firstPlayerActive);
+                addHealth(previousHero, newHero, playerTable);
+                //addSmallVerticalSpace(playerTable);
+                //addCountdown(previousSnapshot, newSnapshot, playerTable, !firstPlayerActive);
                 addMediumVerticalSpace(playerTable);                // was large
+                addReinforcementButton(previousSnapshot, newSnapshot, player, playerTable, !firstPlayerActive);
                 addSkipTurnButton(playerTable, !firstPlayerActive);
                 // BEGIN TEST
                 addMovementButton(playerTable, !firstPlayerActive);
                 addAttackButton(playerTable, !firstPlayerActive);
                 //addMediumVerticalSpace(playerTable); // currently too large with vertical spaces. why?
                 // END TEST
-                addSmallVerticalSpace(playerTable);                 // was large
-                addReinforcementButton(previousSnapshot, newSnapshot, player, playerTable, !firstPlayerActive);
+                //addSmallVerticalSpace(playerTable);                 // was large
+                //addReinforcementButton(previousSnapshot, newSnapshot, player, playerTable, !firstPlayerActive);
             }
         }
         return playerTable;
@@ -117,7 +120,7 @@ public class PlayerCompositor extends Compositor {
         } else {
             addVerticalSpace(playerTable, Dimensions.instance().getLargeSquareIconLength());
         }
-        playerTable.row();
+        //playerTable.row();
     }
 
     /**
@@ -162,14 +165,14 @@ public class PlayerCompositor extends Compositor {
                     button,
                     Dimensions.instance().getLargeSquareIconLength()
             );
-        } else {
+        } //else {
 
-            addSquareIcon(
-                    playerTable,
-                    createIcon(REINFORCEMENT, LARGE, animation),
-                    Dimensions.instance().getLargeSquareIconLength()
-            );
-        }
+//            addSquareIcon(
+//                    playerTable,
+//                    createIcon(REINFORCEMENT, LARGE, animation),
+//                    Dimensions.instance().getLargeSquareIconLength()
+//            );
+//        }
 
 //        playerTable.add(
 //                createLabel(
@@ -178,7 +181,7 @@ public class PlayerCompositor extends Compositor {
 //                        animation
 //                ));
 
-        playerTable.row();
+//        playerTable.row();
     }
 
     private void addHealth(Hero previousHero, Hero newHero, Table playerTable) {
@@ -217,7 +220,7 @@ public class PlayerCompositor extends Compositor {
         } else {
             playerTable.add(createLabel( "" ));
         }
-        playerTable.row();
+        //playerTable.row();
     }
 
     private void addName(Hero newHero, Table playerTable) {
@@ -237,7 +240,7 @@ public class PlayerCompositor extends Compositor {
                 .colspan(2)
                 .width(portraitLength)
                 .height(portraitLength);
-        playerTable.row();
+        //playerTable.row();
     }
 
     private ImageButton getImageButton(Icon icon, IconSize iconSize, boolean animation) {

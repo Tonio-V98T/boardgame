@@ -95,12 +95,7 @@ public class BoardImpl implements Board {
     }
 
     @Override
-    public ArrayList<MobileUnit> getArmyP1() {
-        return null;
-    }
-
-    @Override
-    public ArrayList<MobileUnit> getArmyP2() {
+    public ArrayList<MobileUnit> getActivePlayerArmy(boolean isP1) {
         return null;
     }
 

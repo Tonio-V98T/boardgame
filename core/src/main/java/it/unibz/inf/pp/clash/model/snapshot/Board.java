@@ -28,8 +28,12 @@ public interface Board {
 
     void removeUnitForPlayer(int rowIndex, int columnIndex);
 
-    public ArrayList<MobileUnit> getArmyP1();
-    public ArrayList<MobileUnit> getArmyP2();
+
+    /**
+     * @param isP1 whether active player is P1
+     * @return current player's army
+     */
+    ArrayList<MobileUnit> getActivePlayerArmy(boolean isP1);
 
     /**
      * A pair of coordinates for a tile.
